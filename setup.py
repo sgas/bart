@@ -41,7 +41,7 @@ class InstallBart(install_data):
 cmdclasses = {'install_data': InstallBart} 
 
 
-setup(name='bart',
+setup(name='sgas-bart',
       version=__version__,
       description='SGAS Batch system Reporting Tool',
       author='Henrik Thostrup Jensen',
