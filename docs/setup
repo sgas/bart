@@ -1,0 +1,48 @@
+This document describes how to setup the SGAS BaRT.
+
+The tool consists of two programs/scripts:
+
+bart-logger     : Creates usage records by parsing LRMS logs.
+bart-registrant : Registers usage records to SGAS.
+
+The logger will scan LRMS records and generate usage records (typically in
+/var/spool/bart/usagerecords/), and the registrant registers them. Both
+programs should be invoked regularly by CRON or similar. None of the programs
+are daemons.
+
+
+== Requirements ==
+
+* Python 2.4 or later
+* Twisted Core and Web (http://twistedmatrix.com/)
+* PyOpenSSL (https://launchpad.net/pyopenssl)
+
+Typical package names: python-twisted python-twisted-web python-openssl
+
+
+== Installation ==
+
+$ sudo python setup.py install
+
+Edit the configuration files in /etc/bart/ (or relative to your root if you set
+a root).
+
+Add bart-logger to cron.hourly / crontab (daily is also possible)
+
+The bart-logger tool can also be invoked manually to test it (note that it will
+still write to the logfile).
+
+Check /var/log/bart-logger.log after invokation. Generated urs will be in
+/var/spool/bart/usagerecords/ (or where configured)
+
+Having verified that the logger work, add bart-registrant to cron.hourly /
+crontab.
+
+The programs does not need to run as root as such, however:
+bart-logger     : requires read access to the LRMS records
+bart-registrant : requires read access to host key and certificate
+
+Both programs of course require read/write access to the spool directory, which
+will probably have to created manually if running as non-root (as only root can
+create directories in /var/spool/
+

@@ -1,0 +1,69 @@
+This document describes how to setup the SGAS BaRT alongside the ARC UR Logger,
+such that jobs are not accounted for twice.
+
+It is not a difficult thing to do, but it is highly recommended to understand
+the problem first.
+
+
+== The Problem ==
+
+When both the SGAS BaRT and ARC UR Logger are both deployed at the same site,
+they will both generate usage records for the same job, and register them. If
+not handled properly, this will cause double accounting for the same jobs.
+However "just" having LRMS logging is typically insuficient as a lot of
+information is not available at LRMS level (e.g., grid identity and vo
+information).
+
+
+== Duplicate Detection ==
+
+The duplicate detection and record overwriting is done within the SGAS
+database. However the loggers must be configured such that SGAS can do the
+duplicate detection.
+
+The duplicate detection is done solely via the recordId field in the usage
+records. The recordId field is composed by the host FQDN and LRMS job
+identifier appended together. E.g.,: "benedict.grid.aau.dk:483775.mother".
+Furthermore grid usage records will overwrite LRMS usage records, as the grid
+records contain more information. This is done by looking at the GlobalJobId
+field, but the details are not important.
+
+Note that duplicate detection and overwrite is only supported in the SGAS
+PostgreSQL backend. The CouchDB backend only does regular duplicate detection
+(i.e, grid records will not overwrite LRMS records, if the LRMS record came
+first).
+
+
+== Configuration ==
+
+In order for the duplicate detection to work the host FQDN used at the
+different loggers must be the same. If your setup only have a single frontend
+machine for submitting jobs, configuration will typically not be required.
+
+However if you have multiple frontend machines, you must configure the ARC UR
+Logger and the SGAS BaRT, such that the records are produced with
+identical hostnames. E.g., if you have a setup with an ARC frontend at the host
+arc.mysite.example.org, and an LRMS frontend at lrms.mysite.example.org, you
+should configure the to loggers such that they use the same FQDN, e.g.,
+mysite.example.org. Example configuration follows:
+
+ARC UR Logger:
+Set the hostname setting in the [logger] section in arc.conf, e.g.,:
+---
+[logger]
+hostname="mysite.example.org"
+---
+
+SGAS Bart:
+
+Set the hostname setting in the [common] section in bart.conf (typically
+located /etc/bart/bart.conf), e.g.,:
+---
+[common]
+hostname=benedict.grid.aau.dk
+---
+
+Setting these values, will also mean that the logged machine name will be the
+same for the records (so the accounting data will make sense when looking at
+aggregated values).
+

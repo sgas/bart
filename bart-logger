@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+#
+# Executable for generating usage records.
+# Part of the SGAS Batch system Reporting Tool (BaRT).
+#
+# Author: Henrik Thostrup Jensen <htj@ndgf.org>
+# Copyright: Nordic Data Grid Facility (2009, 2010)
+
+import os
+import sys
+import logging
+
+from bart import config
+
+
+LOG_FORMAT = "%(asctime)s [%(levelname)s] %(message)s"
+
+
+
+def main():
+
+    # start with command line parsing and various setups
+    parser = config.getParser()
+    options, args = parser.parse_args()
+    if not os.path.exists(options.config):
+        # we don't have logging yet
+        print 'Configuration file %s does not exist' % options.config
+        sys.exit(1)
+
+    cfg = config.getConfig(options.config)
+
+    logfile = options.logfile
+    if logfile is None:
+        logfile = config.getConfigValue(cfg, config.SECTION_COMMON, config.LOGFILE, config.DEFAULT_LOG_FILE)
+
+    logging.basicConfig(filename=logfile, format=LOG_FORMAT, level=logging.DEBUG)
+
+    hostname = config.getConfigValue(cfg, config.SECTION_COMMON, config.HOSTNAME)
+    if hostname is None:
+        import socket
+        hostname = socket.getfqdn()
+
+    user_map_file = config.getConfigValue(cfg, config.SECTION_COMMON, config.USERMAP, config.DEFAULT_USERMAP_FILE)
+    vo_map_file   = config.getConfigValue(cfg, config.SECTION_COMMON, config.VOMAP,   config.DEFAULT_VOMAP_FILE)
+
+    # basic configuration done, read in mappings and start lrms specific module
+
+    try:
+        user_map = config.getMapping(user_map_file)
+    except IOError:
+        logging.error('IOError while attempting to read user map at %s (missing file?)' % user_map_file)
+        user_map = {}
+
+    try:
+        vo_map = config.getMapping(vo_map_file)
+    except IOError:
+        logging.error('IOError while attempting to read vo map at %s (missing file?)' % vo_map_file)
+        vo_map = {}
+
+    sections = cfg.sections()
+    if config.SECTION_MAUI in sections:
+        from bart import maui as lrms
+    elif config.SECTION_TORQUE in sections:
+        from bart import torque as lrms
+
+    try:
+        lrms.generateUsageRecords(cfg, hostname, user_map, vo_map)
+    except Exception, e:
+        logging.error('Got exception while generating usage records:')
+        logging.exception(e)
+        sys.exit(3)
+
+
+if __name__ == '__main__':
+    main()
+
