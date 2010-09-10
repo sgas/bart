@@ -178,8 +178,8 @@ class UsageRecord:
             for voi in self.vo_info:
 
                 vo = ET.SubElement(user_identity, VO)
-                if voi.type is not None:
-                    vo.attrib[VO_TYPE] = voi.type
+                if voi.type_ is not None:
+                    vo.attrib[VO_TYPE] = voi.type_
                 setElement(vo, VO_NAME, voi.name)
                 if voi.issuer is not None:
                     setElement(vo, VO_ISSUER, voi.issuer)

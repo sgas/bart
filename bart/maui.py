@@ -124,11 +124,13 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, maui_server_host, m
     if account_name == '[NONE]':
         account_name = None
 
-    vo_info = []
+    mapped_vo = None
     if account_name is not None:
         mapped_vo = vo_map.get(account_name)
-    else:
+    if mapped_vo is None:
         mapped_vo = vo_map.get(user_name)
+
+    vo_info = []
     if mapped_vo is not None:
         voi = usagerecord.VOInformation(name=mapped_vo, type_='bart-vomap')
         vo_info = [voi]
@@ -175,7 +177,7 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, maui_server_host, m
     ur.wall_duration = wall_time
 
     ur.project_name = account_name
-    ur.vo_info += vo_info
+    ur.vo_info = vo_info
 
     return ur
 
