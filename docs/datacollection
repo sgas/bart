@@ -1,0 +1,17 @@
+
+This file explains which sources used for collection the data for the usage
+records.
+
+
+== Maui ==
+
+Data is collected by scanning the Maui workload trace files in
+[maui_spool]/stats/
+
+
+== Torque ==
+
+Data is collected by scanning the files in
+[torque_spool]/server_priv/accounting.
+
+
