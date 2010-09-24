@@ -120,6 +120,7 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, missing_user_mappin
     job_id       = log_entry['jobid']
     user_name    = log_entry['user']
     queue        = log_entry['queue']
+    account      = log_entry.get('account')
     submit_time  = int(log_entry['ctime'])
     start_time   = int(log_entry['start'])
     end_time     = int(log_entry['end'])
@@ -139,7 +140,10 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, missing_user_mappin
         missing_user_mappings[user_name] = True
 
     vo_info = []
-    mapped_vo = vo_map.get(user_name)
+    if account:
+        mapped_vo = vo_map.get(account)
+    else:
+        mapped_vo = vo_map.get(user_name)
     if mapped_vo is not None:
         voi = usagerecord.VOInformation(name=mapped_vo, type_='bart-vomap')
         vo_info.append(voi)
@@ -153,6 +157,7 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, missing_user_mappin
     ur.global_user_name = user_map.get(user_name)
     ur.machine_name     = hostname
     ur.queue            = queue
+    ur.project          = account
     ur.processors       = core_count
     ur.node_count       = len(hosts)
     ur.host             = ','.join(hosts)
