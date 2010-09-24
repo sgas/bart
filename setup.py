@@ -1,44 +1,51 @@
-from distutils.core import setup
-from distutils.command.install_data import install_data
-
 import os
+from distutils.core import setup
+from distutils.command.install import install
+from distutils.command.install_data import install_data
 
 from bart import __version__
 
 
+# nasty global for relocation
+RELOCATE = None
 
-class InstallBart(install_data):
+class InstallBart(install):
+
+    def finalize_options(self):
+        install.finalize_options(self)
+
+        global RELOCATE ; RELOCATE = self.home
+
+
+
+class InstallDataBart(install_data):
     # this class is used to filter out data files which should not be overwritten
 
     def finalize_options(self):
         install_data.finalize_options(self)
 
-        ETC_BART = '/etc/bart'
-        if self.root is not None:
-            ETC_BART = os.path.join(self.root, ETC_BART[1:])
+        # relocation
+        if RELOCATE:
+            print 'relocating to %s' % RELOCATE
+            for (prefix, files) in reversed(self.data_files):
+                if prefix.startswith('/'):
+                    new_prefix = os.path.join(RELOCATE, prefix[1:])
+                    self.data_files.remove((prefix, files))
+                    self.data_files.append((new_prefix, files))
 
-        if not os.path.exists(ETC_BART):
-            os.makedirs(ETC_BART)
-
-        bart_conf = os.path.join(ETC_BART, 'bart.conf')
-        bart_umap = os.path.join(ETC_BART, 'usermap')
-        bart_vmap = os.path.join(ETC_BART, 'vomap')
-
-        if os.path.exists(bart_conf):
-            print "Skipping installation of bart.conf (already exists)"
-            self.data_files.remove( ('/etc/bart', ['datafiles/etc/bart.conf']) )
-
-        if os.path.exists(bart_umap):
-            print "Skipping installation of usermap (already exists)"
-            self.data_files.remove( ('/etc/bart', ['datafiles/etc/usermap']) )
-
-        if os.path.exists(bart_vmap):
-            print "Skipping installation of vomap (already exists)"
-            self.data_files.remove( ('/etc/bart', ['datafiles/etc/vomap']) )
+        # check that we don't overwrite /etc files
+        for (prefix, files) in reversed(self.data_files):
+            if prefix.startswith(os.path.join(RELOCATE or '', 'etc')):
+                for basefile in files:
+                    fn = os.path.join(prefix, os.path.basename(basefile))
+                    if os.path.exists(fn):
+                        print 'Skipping installation of %s (already exists)' % fn
+                        files.remove(basefile)
+            if not files:
+                self.data_files.remove((prefix, []))
 
 
-
-cmdclasses = {'install_data': InstallBart} 
+cmdclasses = {'install': InstallBart, 'install_data': InstallDataBart} 
 
 
 setup(name='sgas-bart',
