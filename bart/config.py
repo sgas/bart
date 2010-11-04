@@ -20,10 +20,12 @@ DEFAULT_MAUI_SPOOL_DIR  = '/var/spool/maui'
 DEFAULT_MAUI_STATE_FILE = 'maui.state'
 DEFAULT_TORQUE_SPOOL_DIR = '/var/spool/torque'
 DEFAULT_TORQUE_STATE_FILE = 'torque.state'
+DEFAULT_SLURM_STATE_FILE = 'slurm.state'
 
 SECTION_COMMON = 'common'
 SECTION_MAUI   = 'maui'
 SECTION_TORQUE = 'torque'
+SECTION_SLURM = 'slurm'
 
 HOSTNAME   = 'hostname'
 USERMAP    = 'usermap'
@@ -38,6 +40,7 @@ MAUI_STATE_FILE = 'statefile'
 TORQUE_SPOOL_DIR = 'spooldir'
 TORQUE_STATE_FILE = 'statefile'
 
+SLURM_STATE_FILE = 'statefile'
 
 # regular expression for matching mapping lines
 rx = re.compile('''\s*(.*)\s*"(.*)"''')
@@ -102,5 +105,7 @@ def getStateFile(cfg):
         return getConfigValue(cfg, SECTION_MAUI, MAUI_STATE_FILE, DEFAULT_MAUI_STATE_FILE)
     elif SECTION_TORQUE in cfg.sections():
         return getConfigValue(cfg, SECTION_TORQUE, TORQUE_STATE_FILE, DEFAULT_TORQUE_STATE_FILE)
+    elif SECTION_SLURM in cfg.sections():
+        return getConfigValue(cfg, SECTION_SLURM, SLURM_STATE_FILE, DEFAULT_SLURM_STATE_FILE)
 
 

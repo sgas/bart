@@ -29,7 +29,7 @@ def getIncrementalDate(date, date_format):
     return next_date
 
 
-def _getStateFileLocation(cfg):
+def getStateFileLocation(cfg):
     """
     Returns the location of state file
     The state file contains the information of whereto the ur generation has been processed
@@ -44,7 +44,7 @@ def getGeneratorState(cfg, date_format):
     Get state of where to the UR generation has reached in the log.
     This is two string tuple containing the jobid and the log file.
     """
-    state_file = _getStateFileLocation(cfg)
+    state_file = getStateFileLocation(cfg)
     if not os.path.exists(state_file):
         # no statefile -> we start from a couple of days back
         t_old = time.time() - 500000
@@ -62,7 +62,7 @@ def writeGeneratorState(cfg, job_id, log_file):
     Write the state of where the logs have been parsed to.
     This is a job id and date (log file and entry).
     """
-    state_file = _getStateFileLocation(cfg)
+    state_file = getStateFileLocation(cfg)
     state_data = '%s %s' % (job_id or '-', log_file)
 
     dirpath = os.path.dirname(state_file)

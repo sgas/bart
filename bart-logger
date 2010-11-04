@@ -62,6 +62,11 @@ def main():
         from bart import maui as lrms
     elif config.SECTION_TORQUE in sections:
         from bart import torque as lrms
+    elif config.SECTION_SLURM in sections:
+        from bart import slurm as lrms
+    else:
+        logging.error('No LRMS configured, please review configuration file. Exiting.')
+        sys.exit(4)
 
     try:
         lrms.generateUsageRecords(cfg, hostname, user_map, vo_map)
