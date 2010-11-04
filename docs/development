@@ -26,7 +26,7 @@ multiple times. The current backends solve this by keeping some state between
 invocations. This state is typically a timestamp and/or jobid. What exactly to
 store is typically backend specific. See the bart/common.py module for some
 typical basic functionality for saving state. If it is impossible to avoid
-duplicates, SGAS will detect duplicate usage records and discard them.
+duplicates, SGAS LUTS will detect duplicate usage records and discard them.
 
 The directory paths you should know about is:
 
@@ -35,4 +35,6 @@ The directory paths you should know about is:
 /usr/local/bin      The program bart-logger and bart-registrant is typically installed here.
 /usr/local/lib/python2.6/dist-packages/bart/
                     The .py files are typically installed here.
+
+When coding, please try to follow the style of the existing code.
 
