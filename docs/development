@@ -1,0 +1,38 @@
+
+SGAS BART consists of a main executable (bart-logger) which, after parsing the
+configuration file, will load an module to extract data from the LRMS and
+creates usage records, which are written to disk.
+
+The usage records are then registered by another program, called
+bart-registrant. This way, only the data extraction and usage records creation
+are needed to develop support for a new LRMS. Furthermore there is a library
+for creating the usage records (bart/usagerecord.py), such that only the fields
+have to be filled out.
+
+The best way to understand how to create a new LRMS backend is to read one of
+the existing backends. In short, a module with the following interface must be
+created:
+
+def generateUsageRecords(cfg, hostname, user_map, vo_map)
+    # generate usage records
+
+See bart/maui.py, bart/torque.py, bart/slurm.py for their respective
+implementations. The code should be fairly straight forward, and usually
+consists of a data acquiral part (parsing files or program output), data
+conversion, and UR creation part.
+
+Typically, the only tricky aspect is to ensure that records are not generated
+multiple times. The current backends solve this by keeping some state between
+invocations. This state is typically a timestamp and/or jobid. What exactly to
+store is typically backend specific. See the bart/common.py module for some
+typical basic functionality for saving state. If it is impossible to avoid
+duplicates, SGAS will detect duplicate usage records and discard them.
+
+The directory paths you should know about is:
+
+/etc/bart           Configuration files are stored here.
+/var/spool/bart/    Usage records and LRMS state is kept here. Can be reconfigured.
+/usr/local/bin      The program bart-logger and bart-registrant is typically installed here.
+/usr/local/lib/python2.6/dist-packages/bart/
+                    The .py files are typically installed here.
+

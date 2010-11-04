@@ -15,3 +15,8 @@ Data is collected by scanning the files in
 [torque_spool]/server_priv/accounting.
 
 
+== SLURM ==
+
+Data is collected by invoking sacct and parsing the output.
+
+
