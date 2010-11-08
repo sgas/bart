@@ -127,14 +127,16 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, missing_user_mappin
     utilized_cpu = getSeconds(log_entry['resources_used.cput'])
     wall_time    = getSeconds(log_entry['resources_used.walltime'])
 
+    hosts = list(set([hc.split('/')[0] for hc in log_entry['exec_host'].split('+')]))
+
     if log_entry.has_key('Resource_List.ncpus'):
         core_count = int(log_entry['Resource_List.ncpus'])
     elif log_entry.has_key('Resource_List.nodes'):
         core_count = getCoreCount(log_entry['Resource_List.nodes'])
     else:
-        logging.warning('Missing processor count for entry: %s' % job_id)
-
-    hosts        = list(set([hc.split('/')[0] for hc in log_entry['exec_host'].split('+')]))
+        logging.warning('Missing processor count for entry: %s (will guess from host list)' % job_id)
+        # assume the number of exec hosts is the core count (possibly not right)
+        core_count = len(hosts)
 
     # clean data and create various composite entries from the work load trace
     if job_id.isdigit() and hostname is not None:
@@ -164,7 +166,7 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, missing_user_mappin
     ur.global_user_name = user_map.get(user_name)
     ur.machine_name     = hostname
     ur.queue            = queue
-    ur.project          = account
+    ur.project_name     = account
     ur.processors       = core_count
     ur.node_count       = len(hosts)
     ur.host             = ','.join(hosts)
