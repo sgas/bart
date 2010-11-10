@@ -1,0 +1,34 @@
+SGAS BART ChangeLog
+
+003:
+
+Added SLURM support.
+
+Add basic documentation for developing new backends.
+
+Fix bug where installation could overwrite existing configuration files.
+
+Properly report project name in Torque backend.
+
+Fix issue with undefined core_count in Torque backend.
+
+
+002:
+
+Support relocation using --home
+
+Report exit status in Torque backend
+
+Properly report core count on older Torque system
+
+Use the account, if available, for VO mapping in Torque backend.
+
+Add description of how data is collected for the backends
+
+List package names required for CentOS/RedHat
+
+
+001:
+
+Initial release with support for Maui and Torque.
+
