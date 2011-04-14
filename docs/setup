@@ -28,6 +28,9 @@ CentOS/RedHat package names: python-twisted-core python-twisted-web pyOpenSSL
 
 $ sudo python setup.py install
 
+The installation can be relocated using --home, i.e.,
+$ python setup.py install --home=/opt/bart
+
 Edit the configuration files in /etc/bart/ (or relative to your root if you set
 a root).
 
