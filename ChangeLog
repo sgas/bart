@@ -1,5 +1,17 @@
 SGAS BART ChangeLog
 
+
+004:
+
+Added documentation with relocation instructions.
+
+Make torque backend work on cray machines with old torque version (patch by
+Alexander Oltu)
+
+Torque backend: Catch ioerror while spooling and chance error to warnings as
+the situation does not call for an exit.
+
+
 003:
 
 Added SLURM support.
