@@ -129,10 +129,30 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, missing_user_mappin
 
     hosts = list(set([hc.split('/')[0] for hc in log_entry['exec_host'].split('+')]))
 
+    # initial value
+    node_count = len(hosts)
+
     if log_entry.has_key('Resource_List.ncpus'):
         core_count = int(log_entry['Resource_List.ncpus'])
     elif log_entry.has_key('Resource_List.nodes'):
         core_count = getCoreCount(log_entry['Resource_List.nodes'])
+    # mppwidth is used on e.g. Cray machines instead of ncpus / nodes
+    elif log_entry.has_key('Resource_List.mppwidth') or log_entry.has_key('Resource_List.size'):
+        if log_entry.has_key('Resource_List.mppwidth'):
+            core_count = int(log_entry['Resource_List.mppwidth'])
+        # older versions on e.g. Cray machines use "size" as keyword for mppwidth or core_count
+        elif log_entry.has_key('Resource_List.size'):
+            core_count = int(log_entry['Resource_List.size'])
+        # get node count, mppnodect exist only in newer versions
+        if log_entry.has_key('Resource_List.mppnodect'):
+            node_count = int(log_entry['Resource_List.mppnodect'])
+        else:
+            logging.warning('Missing mppnodect for entry: %s (will guess from "core count"/mppnppn)' % job_id)
+            try:
+                node_count = core_count / int(log_entry['Resource_List.mppnppn'])
+            except:
+                logging.warning('Unable to calculate node count for entry: %s (will guess from host list)' % job_id)
+                # keep the default of len(hosts) given above
     else:
         logging.warning('Missing processor count for entry: %s (will guess from host list)' % job_id)
         # assume the number of exec hosts is the core count (possibly not right)
@@ -168,7 +188,7 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, missing_user_mappin
     ur.queue            = queue
     ur.project_name     = account
     ur.processors       = core_count
-    ur.node_count       = len(hosts)
+    ur.node_count       = node_count
     ur.host             = ','.join(hosts)
     ur.submit_time      = usagerecord.epoch2isoTime(submit_time)
     ur.start_time       = usagerecord.epoch2isoTime(start_time)
