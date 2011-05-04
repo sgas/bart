@@ -200,17 +200,21 @@ def generateUsageRecords(cfg, hostname, user_map, vo_map):
         log_file = os.path.join(torque_accounting_dir, torque_date)
         tlp = TorqueLogParser(log_file)
         if job_id is not None:
-            tlp.spoolToEntry(job_id)
+            try:
+                tlp.spoolToEntry(job_id)
+            except IOError, e:
+                logging.warning('Error spooling log file at %s for date %s to %s (%s)' % (log_file, torque_date, job_id, str(e)) )
+                job_id = None
+                continue
 
         while True:
 
             try:
                 log_entry = tlp.getNextLogEntry()
-            except IOError:
+            except IOError, e:
                 if torque_date == torque_date_today: # todays entry might not exist yet
-                    #logging.info('Error opening log file for today')
                     break
-                logging.error('Error opening log file at %s for date %s' % (log_file, torque_date))
+                logging.warning('Error reading log file at %s for date %s (%s)' % (log_file, torque_date, str(e)))
                 break
 
             if log_entry is None:
