@@ -16,12 +16,11 @@ import sys
 from common import getStateFileLocation
 from bart import config, usagerecord
 from pwd import getpwuid
-from grp import getgrgid
 
 
 
 STATE_FILE       = 'slurm.state'
-COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,GID,SystemCPU,UserCPU,AllocCPUS,Nodelist --allocations --state=cd --starttime="%s" --endtime="%s"'
+COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --allocations --state=ca,cd,f,nf,to --starttime="%s" --endtime="%s"'
 
 
 
@@ -145,9 +144,9 @@ def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_m
     submit_time  = time.mktime(datetimeFromIsoStr(log_entry[3]).timetuple())
     start_time   = time.mktime(datetimeFromIsoStr(log_entry[4]).timetuple())
     end_time     = time.mktime(datetimeFromIsoStr(log_entry[5]).timetuple())
-    account_name = getgrgid(int(log_entry[6]))[0]
-    utilized_cpu = getSeconds(log_entry[7])
-    wall_time    = getSeconds(log_entry[8])
+    account_name = log_entry[6]
+    utilized_cpu = getSeconds(log_entry[8])
+    wall_time    = getSeconds(log_entry[7])
     core_count   = log_entry[9]
     hosts        = getNodes(log_entry[10])
 
