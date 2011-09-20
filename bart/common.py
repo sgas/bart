@@ -46,11 +46,17 @@ def getGeneratorState(cfg, date_format):
     """
     state_file = getStateFileLocation(cfg)
     if not os.path.exists(state_file):
-        # no statefile -> we start from a couple of days back
-        t_old = time.time() - 500000
+        # no statefile -> first time started, start from a week back
+        t_old = time.time() - (7*24*3600)
         return None, time.strftime(date_format, time.gmtime(t_old))
 
     state_data = open(state_file).readline().strip() # state is only on the first line
+    if not state_data:
+        # Empty state data happens sometimes, usually NFS is involved :-|
+        # Start from yesterday (24 hours back), this should be fine assuming (at least) daily invokation.
+        t_old = time.time() - (24 * 3600)
+        return None, time.strftime(date_format, time.gmtime(t_old))
+
     job_id, date = state_data.split(' ', 2)
     if job_id == '-':
         job_id = None
