@@ -395,7 +395,11 @@ def joinUsageRecordFiles(logdir, filenames):
     urs = ET.Element(USAGE_RECORDS)
 
     for fn in filenames:
-        ur = ET.parse(os.path.join(logdir, UR_DIRECTORY, fn))
+        filepath = os.path.join(logdir, UR_DIRECTORY, fn)
+        if os.path.getsize(filepath) == 0:
+            log.msg("Skipping file %s for transmit as it is empty" % fn)
+            continue
+        ur = ET.parse(filepath)
         urs.append(ur.getroot())
 
     return ET.tostring(urs)
