@@ -11,6 +11,8 @@ Alexander Oltu)
 Torque backend: Catch ioerror while spooling and chance error to warnings as
 the situation does not call for an exit.
 
+Fix SLURM data gathering for account, state and cpu time.
+
 
 003:
 
