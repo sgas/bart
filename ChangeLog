@@ -14,6 +14,10 @@ the situation does not call for an exit.
 Fix SLURM data gathering for account, state and cpu time (patch by Bjørn-Helge
 Mevik)
 
+Skip empty files when joining usagerecords files (prevents registration crash).
+
+Add logic to deal with empty statefile (prevents logger crash).
+
 
 003:
 
