@@ -39,8 +39,8 @@ class SlurmBackend:
             self.results = process.readlines()
         else:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-            os.waitpid(process.pid, 0)
             self.results = process.stdout.readlines()
+            os.waitpid(process.pid, 0)
 
         # remove description line
         self.results = self.results[1:]
