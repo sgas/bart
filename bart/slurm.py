@@ -132,7 +132,7 @@ def datetimeFromIsoStr(dt_str):
 
 
 
-def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_mappings):
+def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_mappings, idtimestamp):
     """
     Creates a Usage Record object given a slurm log entry.
     """
@@ -153,6 +153,10 @@ def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_m
     # clean data and create various composite entries from the work load trace
     job_identifier = job_id
     fqdn_job_id = hostname + ':' + job_id
+    if idtimestamp:
+        record_id = fqdn_job_id + ':' + start_time.replace('-','').replace(':','').upper()
+    else:
+        record_id = fqdn_job_id
 
     if not user_name in user_map:
         missing_user_mappings[user_name] = True
@@ -167,7 +171,7 @@ def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_m
 
     ## fill in usage record fields
     ur = usagerecord.UsageRecord()
-    ur.record_id        = fqdn_job_id
+    ur.record_id        = record_id
     ur.local_job_id     = job_identifier
     ur.global_job_id    = fqdn_job_id
     ur.local_user_id    = user_name
@@ -221,7 +225,7 @@ def writeGeneratorState(cfg, state_time):
 
 
 
-def generateUsageRecords(cfg, hostname, user_map, project_map):
+def generateUsageRecords(cfg, hostname, user_map, project_map, idtimestamp):
     """
     Starts the UR generation process.
     """
@@ -238,7 +242,7 @@ def generateUsageRecords(cfg, hostname, user_map, project_map):
         if log_entry is None:
             break # no more log entries
 
-        ur = createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_mappings)
+        ur = createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_mappings, idtimestamp)
         log_dir = config.getConfigValue(cfg, config.SECTION_COMMON, config.LOGDIR, config.DEFAULT_LOG_DIR)
         ur_dir = os.path.join(log_dir, 'urs')
         if not os.path.exists(ur_dir):

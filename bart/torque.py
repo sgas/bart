@@ -201,7 +201,7 @@ def createUsageRecord(log_entry, hostname, user_map, vo_map, missing_user_mappin
     return ur
 
 
-def generateUsageRecords(cfg, hostname, user_map, vo_map):
+def generateUsageRecords(cfg, hostname, user_map, vo_map, idtimestamp):
     """
     Starts the UR generation process.
     """

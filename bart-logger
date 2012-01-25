@@ -43,6 +43,15 @@ def main():
     user_map_file = config.getConfigValue(cfg, config.SECTION_COMMON, config.USERMAP, config.DEFAULT_USERMAP_FILE)
     vo_map_file   = config.getConfigValue(cfg, config.SECTION_COMMON, config.VOMAP,   config.DEFAULT_VOMAP_FILE)
 
+    idtimestamp_val = config.getConfigValue(cfg, config.SECTION_COMMON, config.config.IDTIMESTAMP, config.DEFAULT_IDTIMESTAMP)
+    idtimestamp = False
+    if idtimestamp_val.lower() in ('true', 'yes', '1'):
+        idtimestamp = True
+    elif idtimestamp_val.lower() in ('false', 'no', '0'):
+        idtimestamp = False
+    else:
+        logging.error('Invalid option for idtimestamp (%)' % idtimestamp)
+
     # basic configuration done, read in mappings and start lrms specific module
 
     try:
@@ -69,7 +78,7 @@ def main():
         sys.exit(4)
 
     try:
-        lrms.generateUsageRecords(cfg, hostname, user_map, vo_map)
+        lrms.generateUsageRecords(cfg, hostname, user_map, vo_map, idtimestamp)
     except Exception, e:
         logging.error('Got exception while generating usage records:')
         logging.exception(e)

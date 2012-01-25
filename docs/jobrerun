@@ -1,0 +1,15 @@
+Some LRMSes, notably SLURM will re-run jobs using the jobid, creating multiple
+entries for a single job id. This creates a problem with the identification of
+jobs, as multiple records end up describing the same job due the job id being
+used for uniquely identifying a job.
+
+To remedy this, the SLURM backend can append the start time of a job to the
+record id, which is used to identify the job. To enables this, set the value
+"idtimestamp" to "true" in the [common] section, i.e.:
+
+[common]
+idtimestamp=true
+
+If the site runs an ARC installation, this value must also be set in [logger]
+section in ARC.
+
