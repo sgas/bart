@@ -248,8 +248,7 @@ def generateUsageRecords(cfg, hostname, user_map, project_map, idtimestamp):
         if not os.path.exists(ur_dir):
             os.makedirs(ur_dir)
 
-        job_id = str(log_entry[0])
-        ur_file = os.path.join(ur_dir, job_id)
+        ur_file = os.path.join(ur_dir, ur.record_id)
         ur.writeXML(ur_file)
 
         logging.info('Wrote usage record to %s' % ur_file)
