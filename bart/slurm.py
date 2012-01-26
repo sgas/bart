@@ -39,8 +39,11 @@ class SlurmBackend:
             self.results = process.readlines()
         else:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-            self.results = process.stdout.readlines()
-            os.waitpid(process.pid, 0)
+            data = ''
+            while process.poll() is None:
+                stdoutdata, _ = process.communicate()
+                data += stdoutdata
+            self.results = data.split('\n')[:-1]
 
         # remove description line
         self.results = self.results[1:]
@@ -154,7 +157,8 @@ def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_m
     job_identifier = job_id
     fqdn_job_id = hostname + ':' + job_id
     if idtimestamp:
-        record_id = fqdn_job_id + ':' + start_time.replace('-','').replace(':','').upper()
+        record_id_timestamp = usagerecord.epoch2isoTime(start_time).translate(None, '-:TZ') # remove characters
+        record_id = fqdn_job_id + ':' + record_id_timestamp
     else:
         record_id = fqdn_job_id
 
