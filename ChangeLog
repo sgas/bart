@@ -1,5 +1,12 @@
 SGAS BART ChangeLog
 
+005:
+
+Use utc/gm time for record id (SLURM backend).
+
+Fix subprocess output gathering not to deadlock (SLURM backend).
+
+Add idtimestamp for dealing with job reruns and documentation for using it.
 
 004:
 
