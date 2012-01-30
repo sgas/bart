@@ -43,7 +43,8 @@ class SlurmBackend:
             while process.poll() is None:
                 stdoutdata, _ = process.communicate()
                 data += stdoutdata
-            self.results = data.split('\n')[:-1]
+            data = data.strip()
+            self.results = data.split('\n')
 
         # remove description line
         self.results = self.results[1:]
