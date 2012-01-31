@@ -43,7 +43,7 @@ def main():
     user_map_file = config.getConfigValue(cfg, config.SECTION_COMMON, config.USERMAP, config.DEFAULT_USERMAP_FILE)
     vo_map_file   = config.getConfigValue(cfg, config.SECTION_COMMON, config.VOMAP,   config.DEFAULT_VOMAP_FILE)
 
-    idtimestamp_val = config.getConfigValue(cfg, config.SECTION_COMMON, config.config.IDTIMESTAMP, config.DEFAULT_IDTIMESTAMP)
+    idtimestamp_val = config.getConfigValue(cfg, config.SECTION_COMMON, config.IDTIMESTAMP, config.DEFAULT_IDTIMESTAMP)
     idtimestamp = False
     if idtimestamp_val.lower() in ('true', 'yes', '1'):
         idtimestamp = True
