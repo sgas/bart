@@ -34,6 +34,9 @@ $ python setup.py install --home=/opt/bart
 Edit the configuration files in /etc/bart/ (or relative to your root if you set
 a root).
 
+If bart configuration is located at an other location then /etc/bart/ the
+argument -c can be used for specifying the location.
+
 Add bart-logger to cron.hourly / crontab (daily is also possible)
 
 The bart-logger tool can also be invoked manually to test it (note that it will
@@ -44,6 +47,10 @@ Check /var/log/bart-logger.log after invokation. Generated urs will be in
 
 Having verified that the logger work, add bart-registrant to cron.hourly /
 crontab.
+
+The logfile for 'bart-registration' is currently 
+fixed to /var/log/bart-registration.log and can only be changed be
+altering the source code.
 
 The programs does not need to run as root as such, however:
 bart-logger     : requires read access to the LRMS records
