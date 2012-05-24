@@ -636,6 +636,8 @@ def main():
     main, mainly a wrapper over the rest of the program.
     """
     def handleError(error):
+        global ERROR
+        ERROR = True
         if error.type == SystemExit:
             log.msg('SystemExit: %s' % error.value)
         else:
