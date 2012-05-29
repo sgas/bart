@@ -261,7 +261,13 @@ def generateUsageRecords(cfg, hostname, user_map, vo_map, idtimestamp):
         torque_date = common.getIncrementalDate(torque_date, TORQUE_DATE_FORMAT)
         job_id = None
 
-    if missing_user_mappings:
+
+    suppress_usermap_info = config.getConfigValueBool(cfg,
+                config.SECTION_COMMON,
+                config.SUPPRESS_USERMAP_INFO,
+                config.DEFAULT_SUPPRESS_USERMAP_INFO)
+
+    if missing_user_mappings and not suppress_usermap_info:
         users = ','.join(missing_user_mappings)
         logging.info('Missing user mapping for the following users: %s' % users)
 

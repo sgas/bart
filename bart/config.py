@@ -17,6 +17,7 @@ DEFAULT_LOG_FILE        = '/var/log/bart-logger.log'
 DEFAULT_LOG_DIR         = '/var/spool/bart/usagerecords'
 DEFAULT_STATEDIR        = '/var/spool/bart'
 DEFAULT_IDTIMESTAMP     = 'false'
+DEFAULT_SUPPRESS_USERMAP_INFO = 'false'
 
 DEFAULT_MAUI_SPOOL_DIR  = '/var/spool/maui'
 DEFAULT_MAUI_STATE_FILE = 'maui.state'
@@ -36,6 +37,7 @@ LOGDIR     = 'logdir'
 LOGFILE    = 'logfile'
 STATEDIR   = 'statedir'
 IDTIMESTAMP = 'idtimestamp'
+SUPPRESS_USERMAP_INFO = 'suppress_usermap_info'
 
 MAUI_SPOOL_DIR  = 'spooldir'
 MAUI_STATE_FILE = 'statefile'
@@ -74,6 +76,24 @@ def getConfigValue(cfg, section, value, default=None):
         return default
     except ConfigParser.NoOptionError:
         return default
+
+
+def getConfigValueBool(cfg, section, value, default=None):
+
+    value = getConfigValue(cfg, section, value, default);
+    if value.lower() in ('true', 'yes', '1'):
+        return True
+    elif value.lower() in ('false', 'no', '0'):
+        return False
+    else:
+        logging.error('Invalid option for % (%)' % (value, idtimestamp))
+
+    if default.lower() in ('true', 'yes', '1'):
+        return True
+    elif default.lower() in ('false', 'no', '0'):
+        return False
+
+    return False;
 
 
 def readFileMap(map_file):
