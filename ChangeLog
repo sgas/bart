@@ -1,5 +1,13 @@
 SGAS BART ChangeLog
 
+006:
+
+Added option to suppress missing usermap info in log file. 
+
+Fix problems with exit(0) if an error occur.
+
+Updated setup instructions.
+
 005:
 
 Use utc/gm time for record id (SLURM backend).
