@@ -4,6 +4,7 @@
 # Module for the SGAS Batch system Reporting Tool (BaRT).
 #
 # Author: Henrik Thostrup Jensen <htj@ndgf.org>
+# Author: Magnus Jonsson <magnus@hpc2n.umu.se>
 # Copyright: Nordic Data Grid Facility (2009, 2010)
 
 import os
