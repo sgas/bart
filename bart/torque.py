@@ -5,6 +5,7 @@
 #
 # Author: Henrik Thostrup Jensen <htj@ndgf.org>
 # Author: Andreas Engelbredt Dalsgaard <andreas.dalsgaard@gmail.com>
+# Author: Magnus Jonsson <magnus@hpc2n.umu.se>
 # Copyright: Nordic Data Grid Facility (2009, 2010)
 
 import os
