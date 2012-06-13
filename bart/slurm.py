@@ -13,6 +13,7 @@ import datetime
 import logging
 import subprocess
 import sys
+import re
 
 from common import getStateFileLocation
 from bart import config, usagerecord
@@ -159,7 +160,7 @@ def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_m
     job_identifier = job_id
     fqdn_job_id = hostname + ':' + job_id
     if idtimestamp:
-        record_id_timestamp = usagerecord.epoch2isoTime(start_time).translate(None, '-:TZ') # remove characters
+        record_id_timestamp = re.sub("[-:TZ]","",usagerecord.epoch2isoTime(start_time)) # remove characters
         record_id = fqdn_job_id + ':' + record_id_timestamp
     else:
         record_id = fqdn_job_id
