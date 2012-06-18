@@ -175,6 +175,7 @@ def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_m
             voi = usagerecord.VOInformation()
             voi.type = 'lrmsurgen-projectmap'
             voi.name = mapped_project
+            vo_info = [voi]
 
     ## fill in usage record fields
     ur = usagerecord.UsageRecord()
@@ -269,39 +270,4 @@ def generateUsageRecords(cfg, hostname, user_map, project_map, idtimestamp):
     if missing_user_mappings and not suppress_usermap_info:
         users = ','.join(missing_user_mappings)
         logging.info('Missing user mapping for the following users: %s' % users)
-
-
-
-
-def test():
-
-    node_list_examples = [
-        "brother13",
-        "brother[13-14]",
-        "brother[13-18]",
-        "brother[13-14,16,19]",
-        "compute-3-29",
-        "compute-10-[11,13-14,16]",
-        "compute-10-[11,13-14,16],compute-11-29",
-        "compute-1-[0-1,3-18,20-24,26,28-30,32]",
-        "compute-11-12,compute-13-[25-26,28-32]",
-        "compute-14-[1-12,15,30-31]",
-        "compute-2-[1-2,6-18,21,23,26-29]",
-        "compute-4-[4-5,7-9,12-13,15-18,20-21,23-28,30-34]",
-        "compute-5-[2,5,9-11,13,15-16,22,26,28],compute-6-[28,31-34],compute-7-[2,4-5,7]",
-        "compute-10-[11,13-14,16],compute-1-[0-1,3-18,20-24,26,28-30,32],compute-11-12,compute-13-[25-26,28-32],compute-14-[1-12,15,30-31],compute-2-[1-2,6-18,21,23,26-29],compute-4-[4-5,7-9,12-13,15-18,20-21,23-28,30-34],compute-5-[2,5,9-11,13,15-16,22,26,28],compute-6-[28,31-34],compute-7-[2,4-5,7]"
-    ]
-
-    for n in node_list_examples:
-        print n
-        print getNodes(n)
-        print
-
-
-def main():
-    test()
-
-if __name__ == '__main__':
-    main()
-
 
