@@ -10,6 +10,7 @@
 import os
 import time
 import datetime
+import dateutil.parser
 import logging
 import subprocess
 import sys
@@ -33,6 +34,12 @@ class SlurmBackend:
     def __init__(self, state_starttime):
 
         self.end_str = datetime.datetime.now().isoformat().split('.')[0]
+        # Check if number of days since last run is > 7 days, if so only
+        # advance 7 days, TODO: Make this time configurable
+        if datetime.datetime.now() - dateutil.parser.parse(state_starttime) > datetime.timedelta(days=7):
+            self.end_str = dateutil.parser.parse(state_starttime) + datetime.timedelta(days=7)
+            self.end_str = self.end_str.isoformat().split('.')[0]
+
         command = COMMAND % (state_starttime, self.end_str)
 
         # subprocess can be more than 10x times slower than popen in python2.4
