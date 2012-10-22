@@ -80,14 +80,21 @@ def getNodes(node_str):
     "compute-3-29"
     "compute-10-[11,13-14,16]",
     "compute-1-[0-1,3-18,20-24,26,28-30,32],compute-11-12,compute-13-[25-26,28-32],compute-14-[1-12,15,30-31],compute-2-[1-2,6-18,21,23,26-29],compute-4-[4-5,7-9,12-13,15-18,20-21,23-28,30-34],compute-5-[2,5,9-11,13,15-16,22,26,28],compute-6-[28,31-34],compute-7-[2,4-5,7]"]
+    "foo,bar"
+    "foo001,bar[123,125]
+    "foo[01-02        <- raises Exception
     """
     nodes = []
-    if '],' in node_str:
-        elements = node_str.split('],')
-    else:
-        elements = [node_str]
 
-    for element in elements:
+    # Find all groups of "host","host[a,b]", "host[a-b]", etc...
+    p = re.compile(r'(?<=,)(?:[^,\]\[]+\[[^\]]+\]|[^,\]\[]+(?=,|$))')
+
+    # Check if string is valid
+    if p.sub("","," + node_str).replace(",","") != "":
+        raise Exception("Invalid node string: " + node_str)
+    
+    # Iter over all groups
+    for element in p.findall("," + node_str):
         if '[' in element:
             parts = element.split('[')
 
@@ -97,14 +104,12 @@ def getNodes(node_str):
                     numbers = sequence.split('-')
 
                     for i in range(int(numbers[0]),int(numbers[1])+1):
-                        nodes.append(parts[0] + str(i))
+                        nodes.append(parts[0] + str(i).zfill(len(numbers[0])))
                 else:
                     nodes.append(parts[0] + sequence)
         else:
             nodes += [element]
-
     return nodes
-
 
 
 def getSeconds(time_str):

@@ -25,7 +25,12 @@ node_list_examples = [
             { 'from': "compute-1-[0-1,3-18,20-24,26,28-30,32]",
                 'ref': ['compute-1-0', 'compute-1-1', 'compute-1-3', 'compute-1-4', 'compute-1-5', 'compute-1-6', 'compute-1-7', 'compute-1-8', 'compute-1-9', 'compute-1-10', 'compute-1-11', 'compute-1-12', 'compute-1-13', 'compute-1-14', 'compute-1-15', 'compute-1-16', 'compute-1-17', 'compute-1-18', 'compute-1-20', 'compute-1-21', 'compute-1-22', 'compute-1-23', 'compute-1-24', 'compute-1-26', 'compute-1-28', 'compute-1-29', 'compute-1-30', 'compute-1-32'] },
             { 'from': "compute-11-12,compute-13-[25-26,28-32]",
-                'ref': ['compute-11-12,compute-13-25', 'compute-11-12,compute-13-26', 'compute-11-12,compute-13-28', 'compute-11-12,compute-13-29', 'compute-11-12,compute-13-30', 'compute-11-12,compute-13-31', 'compute-11-12,compute-13-32'] },
+                'ref': ['compute-11-12','compute-13-25',
+                    'compute-11-12','compute-13-26',
+                    'compute-11-12','compute-13-28',
+                    'compute-11-12','compute-13-29',
+                    'compute-11-12','compute-13-30',
+                    'compute-11-12','compute-13-31', 'compute-11-12','compute-13-32'] },
             { 'from': "compute-14-[1-12,15,30-31]",
                 'ref': ['compute-14-1', 'compute-14-2', 'compute-14-3', 'compute-14-4', 'compute-14-5', 'compute-14-6', 'compute-14-7', 'compute-14-8', 'compute-14-9', 'compute-14-10', 'compute-14-11', 'compute-14-12', 'compute-14-15', 'compute-14-30', 'compute-14-31'] },
             { 'from': "compute-2-[1-2,6-18,21,23,26-29]",
@@ -35,7 +40,26 @@ node_list_examples = [
             { 'from': "compute-5-[2,5,9-11,13,15-16,22,26,28],compute-6-[28,31-34],compute-7-[2,4-5,7]",
                 'ref': ['compute-5-2', 'compute-5-5', 'compute-5-9', 'compute-5-10', 'compute-5-11', 'compute-5-13', 'compute-5-15', 'compute-5-16', 'compute-5-22', 'compute-5-26', 'compute-5-28', 'compute-6-28', 'compute-6-31', 'compute-6-32', 'compute-6-33', 'compute-6-34', 'compute-7-2', 'compute-7-4', 'compute-7-5', 'compute-7-7'] },
             { 'from': "compute-10-[11,13-14,16],compute-1-[0-1,3-18,20-24,26,28-30,32],compute-11-12,compute-13-[25-26,28-32],compute-14-[1-12,15,30-31],compute-2-[1-2,6-18,21,23,26-29],compute-4-[4-5,7-9,12-13,15-18,20-21,23-28,30-34],compute-5-[2,5,9-11,13,15-16,22,26,28],compute-6-[28,31-34],compute-7-[2,4-5,7]", 
-                'ref': ['compute-10-11', 'compute-10-13', 'compute-10-14', 'compute-10-16', 'compute-1-0', 'compute-1-1', 'compute-1-3', 'compute-1-4', 'compute-1-5', 'compute-1-6', 'compute-1-7', 'compute-1-8', 'compute-1-9', 'compute-1-10', 'compute-1-11', 'compute-1-12', 'compute-1-13', 'compute-1-14', 'compute-1-15', 'compute-1-16', 'compute-1-17', 'compute-1-18', 'compute-1-20', 'compute-1-21', 'compute-1-22', 'compute-1-23', 'compute-1-24', 'compute-1-26', 'compute-1-28', 'compute-1-29', 'compute-1-30', 'compute-1-32', 'compute-11-12,compute-13-25', 'compute-11-12,compute-13-26', 'compute-11-12,compute-13-28', 'compute-11-12,compute-13-29', 'compute-11-12,compute-13-30', 'compute-11-12,compute-13-31', 'compute-11-12,compute-13-32', 'compute-14-1', 'compute-14-2', 'compute-14-3', 'compute-14-4', 'compute-14-5', 'compute-14-6', 'compute-14-7', 'compute-14-8', 'compute-14-9', 'compute-14-10', 'compute-14-11', 'compute-14-12', 'compute-14-15', 'compute-14-30', 'compute-14-31', 'compute-2-1', 'compute-2-2', 'compute-2-6', 'compute-2-7', 'compute-2-8', 'compute-2-9', 'compute-2-10', 'compute-2-11', 'compute-2-12', 'compute-2-13', 'compute-2-14', 'compute-2-15', 'compute-2-16', 'compute-2-17', 'compute-2-18', 'compute-2-21', 'compute-2-23', 'compute-2-26', 'compute-2-27', 'compute-2-28', 'compute-2-29', 'compute-4-4', 'compute-4-5', 'compute-4-7', 'compute-4-8', 'compute-4-9', 'compute-4-12', 'compute-4-13', 'compute-4-15', 'compute-4-16', 'compute-4-17', 'compute-4-18', 'compute-4-20', 'compute-4-21', 'compute-4-23', 'compute-4-24', 'compute-4-25', 'compute-4-26', 'compute-4-27', 'compute-4-28', 'compute-4-30', 'compute-4-31', 'compute-4-32', 'compute-4-33', 'compute-4-34', 'compute-5-2', 'compute-5-5', 'compute-5-9', 'compute-5-10', 'compute-5-11', 'compute-5-13', 'compute-5-15', 'compute-5-16', 'compute-5-22', 'compute-5-26', 'compute-5-28', 'compute-6-28', 'compute-6-31', 'compute-6-32', 'compute-6-33', 'compute-6-34', 'compute-7-2', 'compute-7-4', 'compute-7-5', 'compute-7-7'] },
+                'ref': ['compute-10-11', 'compute-10-13', 'compute-10-14',
+                    'compute-10-16', 'compute-1-0', 'compute-1-1',
+                    'compute-1-3', 'compute-1-4', 'compute-1-5', 'compute-1-6',
+                    'compute-1-7', 'compute-1-8', 'compute-1-9', 'compute-1-10',
+                    'compute-1-11', 'compute-1-12', 'compute-1-13',
+                    'compute-1-14', 'compute-1-15', 'compute-1-16',
+                    'compute-1-17', 'compute-1-18', 'compute-1-20',
+                    'compute-1-21', 'compute-1-22', 'compute-1-23',
+                    'compute-1-24', 'compute-1-26', 'compute-1-28',
+                    'compute-1-29', 'compute-1-30', 'compute-1-32',
+                    'compute-11-12','compute-13-25',
+                    'compute-11-12','compute-13-26',
+                    'compute-11-12','compute-13-28',
+                    'compute-11-12','compute-13-29',
+                    'compute-11-12','compute-13-30',
+                    'compute-11-12','compute-13-31', 'compute-11-12','compute-13-32', 'compute-14-1', 'compute-14-2', 'compute-14-3', 'compute-14-4', 'compute-14-5', 'compute-14-6', 'compute-14-7', 'compute-14-8', 'compute-14-9', 'compute-14-10', 'compute-14-11', 'compute-14-12', 'compute-14-15', 'compute-14-30', 'compute-14-31', 'compute-2-1', 'compute-2-2', 'compute-2-6', 'compute-2-7', 'compute-2-8', 'compute-2-9', 'compute-2-10', 'compute-2-11', 'compute-2-12', 'compute-2-13', 'compute-2-14', 'compute-2-15', 'compute-2-16', 'compute-2-17', 'compute-2-18', 'compute-2-21', 'compute-2-23', 'compute-2-26', 'compute-2-27', 'compute-2-28', 'compute-2-29', 'compute-4-4', 'compute-4-5', 'compute-4-7', 'compute-4-8', 'compute-4-9', 'compute-4-12', 'compute-4-13', 'compute-4-15', 'compute-4-16', 'compute-4-17', 'compute-4-18', 'compute-4-20', 'compute-4-21', 'compute-4-23', 'compute-4-24', 'compute-4-25', 'compute-4-26', 'compute-4-27', 'compute-4-28', 'compute-4-30', 'compute-4-31', 'compute-4-32', 'compute-4-33', 'compute-4-34', 'compute-5-2', 'compute-5-5', 'compute-5-9', 'compute-5-10', 'compute-5-11', 'compute-5-13', 'compute-5-15', 'compute-5-16', 'compute-5-22', 'compute-5-26', 'compute-5-28', 'compute-6-28', 'compute-6-31', 'compute-6-32', 'compute-6-33', 'compute-6-34', 'compute-7-2', 'compute-7-4', 'compute-7-5', 'compute-7-7'] },
+                { 'from': "a,b[01-02]",
+                    'ref': ['a','b01','b02'] },
+                { 'from': "a,b",
+                    'ref': ['a','b'] },
         ]
 
 class TestSequenceFunctions(unittest.TestCase):
@@ -45,11 +69,13 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_getNodes(self):
         for n in node_list_examples:
-            print slurm.getNodes(n['from'])
-            print n['ref']
+            #print slurm.getNodes(n['from'])
+            #print n['ref']
             #print set(slurm.getNodes(n['from'])) ^ set(n['ref'])
             #print
-            self.assertSetEqual(set(slurm.getNodes(n['from'])), set(n['ref']), "Set is not Equal")
+            self.assertSetEqual(set(slurm.getNodes(n['from'])), set(n['ref']),
+                    "Set is not Equal (\n%r,\n%r,\n%r\n)" %
+                    (n['from'],n['ref'],slurm.getNodes(n['from'])))
 
     def test_getSeconds(self):
         print "Testing getSeconds()"
