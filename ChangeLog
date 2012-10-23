@@ -1,5 +1,24 @@
 SGAS BART ChangeLog
 
+007:
+
+Fixed bug in SLURM backend that removes last char in hostname(s) from sacct.
+
+Fixed problem with translate(None) on python 2.4.
+
+RPM Spec file for bart provided by Pär Andersson <paran@nsc.liu.se>
+
+Fixed problem with getNodes in SLURM backend.
+
+Fix end of line strip issue in SLURM backend.
+
+Patch to make slurm only advance 7 days at a time.
+(This will be configurable in the future release)
+
+Fixed bug with vo_map in slurm (not used correct).
+
+Created unittest för slurm.py (and removed small testcase in slurm.py).
+
 006:
 
 Added option to suppress missing usermap info in log file. 
