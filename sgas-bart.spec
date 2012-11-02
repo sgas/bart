@@ -7,17 +7,17 @@ Name: %{name}
 Version: %{version}
 Release: %{release}
 Source0: %{name}-%{version}.tar.gz
-License: UNKNOWN
+License: Licensed under the Apache License, Version 2.0
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: noarch
-Vendor: Henrik Thostrup Jensen <htj@ndgf.org>
+Vendor: Magnus Jonsson <magnus@hpc2n.umu.se>
 Url: http://www.sgas.se/
 Requires: python-twisted-core, python-twisted-web, pyOpenSSL
 
 %description
-UNKNOWN
+Tool for generating usage records from LRMS logs and registering the records to SGAS.
 
 %prep
 %setup
