@@ -1,0 +1,12 @@
+Source: sgas-bart
+Maintainer: Magnus Jonsson <magnus@hpc2n.umu.se>
+Section: python
+Priority: optional
+Build-Depends: python-all (>= 2.6.5-1), debhelper (>= 7.4.3)
+Standards-Version: 3.9.1
+
+Package: sgas-bart
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Description: SGAS Batch system Reporting Tool
+

@@ -1,0 +1,7 @@
+#!/bin/sh
+if [ "`/bin/grep -c '^## EXAMPLE ##$' /etc/bart/bart.conf`" = "0" ]; then
+	if [ -x /usr/bin/bart-logger -a -x /usr/bin/bart-registrant ]; then
+		/usr/bin/bart-logger || exit 1
+		/usr/bin/bart-registrant || exit 1
+	fi
+fi
