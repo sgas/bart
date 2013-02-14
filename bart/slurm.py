@@ -23,7 +23,7 @@ from pwd import getpwuid
 
 
 STATE_FILE       = 'slurm.state'
-COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --allocations --state=ca,cd,f,nf,to --starttime="%s" --endtime="%s"'
+COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --allocations --state=ca,cd,f,nf,to --starttime="%s" --endtime="%s" %s'
 
 
 
@@ -31,7 +31,7 @@ class SlurmBackend:
     """
     DB backend for slurm accounting.
     """
-    def __init__(self, state_starttime):
+    def __init__(self, state_starttime, remove_dupes):
 
         self.end_str = datetime.datetime.now().isoformat().split('.')[0]
         # Check if number of days since last run is > 7 days, if so only
@@ -40,7 +40,11 @@ class SlurmBackend:
             self.end_str = dateutil.parser.parse(state_starttime) + datetime.timedelta(days=7)
             self.end_str = self.end_str.isoformat().split('.')[0]
 
-        command = COMMAND % (state_starttime, self.end_str)
+        dupstr = "";
+        if not remove_dupes:
+            dupstr = "-D"
+
+        command = COMMAND % (state_starttime, self.end_str, dupstr)
 
         # subprocess can be more than 10x times slower than popen in python2.4
         if sys.version_info < (2, 5):
@@ -252,7 +256,7 @@ def generateUsageRecords(cfg, hostname, user_map, project_map, idtimestamp):
     start_time = getGeneratorState(cfg)
     missing_user_mappings = {}
 
-    tlp = SlurmBackend(start_time)
+    tlp = SlurmBackend(start_time, not idtimestamp)
     end_time = tlp.end_str
 
     while True:
