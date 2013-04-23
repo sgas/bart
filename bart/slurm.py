@@ -23,7 +23,7 @@ from pwd import getpwuid
 
 
 STATE_FILE       = 'slurm.state'
-COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --allocations --state=ca,cd,f,nf,to --starttime="%s" --endtime="%s" %s'
+COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --allocations --state=ca,cd,f,nf,to,pr --starttime="%s" --endtime="%s" %s'
 
 
 
