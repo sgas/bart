@@ -1,5 +1,14 @@
 SGAS BART ChangeLog
 
+008:
+
+Changed how slurm reports number of nodes.
+This change the output format from the sacct command.
+
+Added Preempted jobs in slurm.
+
+Added "duplicated" (sacct -D) jobs in slurm if idtimestamp is activated.
+
 007:
 
 Fixed bug in SLURM backend that removes last char in hostname(s) from sacct.

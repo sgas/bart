@@ -23,7 +23,7 @@ from pwd import getpwuid
 
 
 STATE_FILE       = 'slurm.state'
-COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --allocations --state=ca,cd,f,nf,to,pr --starttime="%s" --endtime="%s" %s'
+COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist,NNodes --allocations --state=ca,cd,f,nf,to,pr --starttime="%s" --endtime="%s" %s'
 
 
 
@@ -171,6 +171,7 @@ def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_m
     wall_time    = getSeconds(log_entry[7])
     core_count   = log_entry[9]
     hosts        = getNodes(log_entry[10])
+    node_count   = log_entry[11]
 
     # clean data and create various composite entries from the work load trace
     job_identifier = job_id
@@ -203,7 +204,7 @@ def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_m
     ur.machine_name     = hostname
     ur.queue            = queue
     ur.processors       = core_count
-    ur.node_count       = len(hosts)
+    ur.node_count       = node_count
     ur.host             = ','.join(hosts)
     ur.submit_time      = usagerecord.epoch2isoTime(submit_time)
     ur.start_time       = usagerecord.epoch2isoTime(start_time)
