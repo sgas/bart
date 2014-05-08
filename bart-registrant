@@ -30,6 +30,8 @@ from twisted.internet import reactor, defer
 from twisted.python import log, usage, failure
 from twisted.web import client
 
+from bart import urelements as ur
+
 
 # Nasty global so we can do proper exit codes
 ERROR = False
@@ -68,28 +70,13 @@ UR_DIRECTORY = 'urs'
 STATE_DIRECTORY = 'state'
 ARCHIVE_DIRECTORY = 'archive'
 
-# ur namespaces and tag names, only needed ones
-
-OGF_UR_NAMESPACE  = "http://schema.ogf.org/urf/2003/09/urf"
-SGAS_VO_NAMESPACE = "http://www.sgas.se/namespaces/2009/05/ur/vo"
-
-USAGE_RECORDS    = ET.QName("{%s}UsageRecords"   % OGF_UR_NAMESPACE)
-JOB_USAGE_RECORD = ET.QName("{%s}JobUsageRecord" % OGF_UR_NAMESPACE)
-RECORD_IDENTITY  = ET.QName("{%s}RecordIdentity" % OGF_UR_NAMESPACE)
-USER_IDENTITY    = ET.QName("{%s}UserIdentity"   % OGF_UR_NAMESPACE)
-VO               = ET.QName("{%s}VO"             % SGAS_VO_NAMESPACE)
-VO_NAME          = ET.QName("{%s}Name"           % SGAS_VO_NAMESPACE)
-
-
 # -- code
-
 
 
 class CommandLineOptions(usage.Options):
 
     optFlags = [ ['stdout', 's', 'Log to stdout'] ]
     optParameters = [ ['config-file', 'c', None, 'Config file to use (typically /etc/bart/bart.conf)'] ]
-
 
 
 class StateFile:
@@ -241,11 +228,11 @@ def getVONamesFromUsageRecord(ur):
 
     vos = []
     for e in ur.getroot():
-        if e.tag == USER_IDENTITY:
+        if e.tag == ur.USER_IDENTITY:
             for f in e:
-                if f.tag == VO:
+                if f.tag == ur.VO:
                     for g in f:
-                        if g.tag == VO_NAME:
+                        if g.tag == ur.VO_NAME:
                             vos.append(g.text)
     return vos
 
@@ -392,7 +379,7 @@ def insertUsageRecords(url, payload, ctxFactory):
 
 def joinUsageRecordFiles(logdir, filenames):
 
-    urs = ET.Element(USAGE_RECORDS)
+    urs = ET.Element(ur.USAGE_RECORDS)
 
     for fn in filenames:
         filepath = os.path.join(logdir, UR_DIRECTORY, fn)
