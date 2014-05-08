@@ -450,7 +450,7 @@ def _performURRegistration(regmap, urmap, logdir, ctxFactory, batch_size):
 
     if not regmap:
         log.msg("Failed to get any service refs, not doing any registrations")
-        return
+        return defer.fail(Exception("Failed to get any service refs, not doing any registrations"))
 
     batch_sets = {}
     for ep, urreg in regmap.items():

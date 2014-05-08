@@ -4,21 +4,22 @@
 # Part of the SGAS Batch system Reporting Tool (BaRT).
 #
 # Author: Henrik Thostrup Jensen <htj@ndgf.org>
+# Author: Magnus Jonsson <magnus@hpc2n.umu.se>
 # Copyright: Nordic Data Grid Facility (2009, 2010)
 
 import os
 import sys
+import traceback
 import logging
+import re
 
-from bart import config
-
+from bart import config, common
+from bart.config import BartConfig
+from bart.config import BartMapFile
 
 LOG_FORMAT = "%(asctime)s [%(levelname)s] %(message)s"
 
-
-
 def main():
-
     # start with command line parsing and various setups
     parser = config.getParser()
     options, args = parser.parse_args()
@@ -27,63 +28,89 @@ def main():
         print 'Configuration file %s does not exist' % options.config
         sys.exit(1)
 
-    cfg = config.getConfig(options.config)
+    # read config file
+    cfg = None
+    try:
+        cfg = BartConfig(options.config)
+    except:
+        print "Can't read config file: %s" % options.config 
+        sys.exit(1)
 
+	# open logfile
     logfile = options.logfile
     if logfile is None:
-        logfile = config.getConfigValue(cfg, config.SECTION_COMMON, config.LOGFILE, config.DEFAULT_LOG_FILE)
+        logfile = cfg.getConfigValue(config.SECTION_COMMON, config.LOGFILE, config.DEFAULT_LOG_FILE)
 
     logging.basicConfig(filename=logfile, format=LOG_FORMAT, level=logging.DEBUG)
 
-    hostname = config.getConfigValue(cfg, config.SECTION_COMMON, config.HOSTNAME)
+    # Load user map file
+    user_map = BartMapFile()
+    try:
+    	user_map_file = cfg.getConfigValue(config.SECTION_COMMON, config.USERMAP, config.DEFAULT_USERMAP_FILE)
+        user_map.load(user_map_file)
+    except IOError:
+        logging.error('IOError while attempting to read user map at %s (missing file?)' % user_map_file)
+
+    # Load vo map file
+    vo_map = BartMapFile()
+    try:
+    	vo_map_file = cfg.getConfigValue(config.SECTION_COMMON, config.VOMAP, config.DEFAULT_VOMAP_FILE)
+        vo_map.load(vo_map_file)
+    except IOError:
+        logging.error('IOError while attempting to read vo map at %s (missing file?)' % vo_map_file)
+
+    # get hostname, if missing from config use host fqdn
+    hostname = cfg.getConfigValue(config.SECTION_COMMON, config.HOSTNAME)
     if hostname is None:
         import socket
         hostname = socket.getfqdn()
 
-    user_map_file = config.getConfigValue(cfg, config.SECTION_COMMON, config.USERMAP, config.DEFAULT_USERMAP_FILE)
-    vo_map_file   = config.getConfigValue(cfg, config.SECTION_COMMON, config.VOMAP,   config.DEFAULT_VOMAP_FILE)
+    lrmsObj = None
+    for section in cfg.sections():
+        if section in ['common','logger']:
+            continue
 
-    idtimestamp_val = config.getConfigValue(cfg, config.SECTION_COMMON, config.IDTIMESTAMP, config.DEFAULT_IDTIMESTAMP)
-    idtimestamp = False
-    if idtimestamp_val.lower() in ('true', 'yes', '1'):
-        idtimestamp = True
-    elif idtimestamp_val.lower() in ('false', 'no', '0'):
-        idtimestamp = False
-    else:
-        logging.error('Invalid option for idtimestamp (%)' % idtimestamp)
+    	# Handle lrms sections
+    	try:    		
+    		# Load lrms module
+            csection = re.sub("^([a-z])",lambda x: x.group(0).upper(),section)
 
-    # basic configuration done, read in mappings and start lrms specific module
+            logging.info("Module %s loading" % section)
 
-    try:
-        user_map = config.getMapping(user_map_file)
-    except IOError:
-        logging.error('IOError while attempting to read user map at %s (missing file?)' % user_map_file)
-        user_map = {}
+            # import lrms module
+            lrmsModule = __import__('bart.%s' % section,globals(),locals(),[csection])
+            # Validate cfg options for lrms module
+            cfg.validate(section,lrmsModule)
+            # Create lrms class
+            lrmsClass = getattr(lrmsModule,csection)
+            # Instansiate lrms object 
+            lrmsObj = lrmsClass(cfg)
+    		# read state file
+            common.readGeneratorState(lrmsObj)
 
-    try:
-        vo_map = config.getMapping(vo_map_file)
-    except IOError:
-        logging.error('IOError while attempting to read vo map at %s (missing file?)' % vo_map_file)
-        vo_map = {}
+            # create URs
+            lrmsObj.generateUsageRecords(hostname, user_map, vo_map)
+	        			
+            # write state file				
+            common.writeGeneratorState(lrmsObj)
+    		
+            # log missing user mappings
+            suppress_usermap_info = cfg.getConfigValueBool(config.SECTION_COMMON,config.SUPPRESS_USERMAP_INFO,config.DEFAULT_SUPPRESS_USERMAP_INFO)
+            if not suppress_usermap_info and lrmsObj.missing_user_mappings:
+                users = ','.join(lrmsObj.missing_user_mappings)
+                logging.info('Missing user mapping for the following users: %s' % users)
+                
+            logging.info('Module %s done' % section)
 
-    sections = cfg.sections()
-    if config.SECTION_MAUI in sections:
-        from bart import maui as lrms
-    elif config.SECTION_TORQUE in sections:
-        from bart import torque as lrms
-    elif config.SECTION_SLURM in sections:
-        from bart import slurm as lrms
-    else:
-        logging.error('No LRMS configured, please review configuration file. Exiting.')
-        sys.exit(4)
-
-    try:
-        lrms.generateUsageRecords(cfg, hostname, user_map, vo_map, idtimestamp)
-    except Exception, e:
-        logging.error('Got exception while generating usage records:')
-        logging.exception(e)
-        sys.exit(3)
-
+        except Exception, e:
+            logging.error('Got exception while generating usage records:')
+            logging.exception(e)
+            traceback.print_exc(file=sys.stderr)
+            sys.exit(3)       		
+            
+    if lrmsObj is None:
+        logging.error('No lrms section found in config')       
+        sys.exit(3)    	
 
 if __name__ == '__main__':
     main()

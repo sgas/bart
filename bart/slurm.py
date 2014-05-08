@@ -16,35 +16,46 @@ import subprocess
 import sys
 import re
 
-from common import getStateFileLocation
-from bart import config, usagerecord
+from bart import config, usagerecord, common
 from pwd import getpwuid
 
+SECTION = 'slurm'
 
+STATEFILE = 'statefile'
+DEFAULT_STATEFILE = SECTION + '.state'
 
-STATE_FILE       = 'slurm.state'
-COMMAND          = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist,NNodes --allocations --state=ca,cd,f,nf,to,pr --starttime="%s" --endtime="%s" %s'
+STATEFILE_DEFAULT = 'statefile_default'
+DEFAULT_STATEFILE_DEFAULT = 50000
 
+IDTIMESTAMP = 'idtimestamp'
+DEFAULT_IDTIMESTAMP = 'false'
 
+MAX_DAYS = 'max_days'
+MAX_DAYS_DEFAULT = 0
+
+CONFIG = {
+            STATEFILE:         { 'required': False },
+            STATEFILE_DEFAULT: { 'required': False, type: 'int' },
+            IDTIMESTAMP:       { 'required': False, type: 'bool' },
+            MAX_DAYS:          { 'required': False, type: 'int' },
+          }
+
+COMMAND = 'sacct --allusers --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --state=ca,cd,f,nf,to --starttime="%s" --endtime="%s"'
 
 class SlurmBackend:
     """
     DB backend for slurm accounting.
     """
-    def __init__(self, state_starttime, remove_dupes):
+    def __init__(self, state_starttime, max_days):
 
         self.end_str = datetime.datetime.now().isoformat().split('.')[0]
-        # Check if number of days since last run is > 7 days, if so only
-        # advance 7 days, TODO: Make this time configurable
-        if datetime.datetime.now() - dateutil.parser.parse(state_starttime) > datetime.timedelta(days=7):
-            self.end_str = dateutil.parser.parse(state_starttime) + datetime.timedelta(days=7)
+        # Check if number of days since last run is > max_days, if so only
+        # advance max_days days     
+        if max_days > 0 and datetime.datetime.now() - dateutil.parser.parse(state_starttime) > datetime.timedelta(days=max_days):
+            self.end_str = dateutil.parser.parse(state_starttime) + datetime.timedelta(days=max_days)
             self.end_str = self.end_str.isoformat().split('.')[0]
 
-        dupstr = "";
-        if not remove_dupes:
-            dupstr = "-D"
-
-        command = COMMAND % (state_starttime, self.end_str, dupstr)
+        command = COMMAND % (state_starttime, self.end_str)
 
         # subprocess can be more than 10x times slower than popen in python2.4
         if sys.version_info < (2, 5):
@@ -67,224 +78,165 @@ class SlurmBackend:
 
         try:
             entry = self.results.pop(0)
-            return entry.strip().split('|')
+            return entry[:-1].split('|')
         except IndexError:
             return None
 
-
-
-def getNodes(node_str):
-    """
-    Makes a list of nodes from strings like:
-
-    "brother[13-14]"
-    "brother13"
-    "brother[13-14,16,19]"
-    "brother[13-18]"
-    "compute-3-29"
-    "compute-10-[11,13-14,16]",
-    "compute-1-[0-1,3-18,20-24,26,28-30,32],compute-11-12,compute-13-[25-26,28-32],compute-14-[1-12,15,30-31],compute-2-[1-2,6-18,21,23,26-29],compute-4-[4-5,7-9,12-13,15-18,20-21,23-28,30-34],compute-5-[2,5,9-11,13,15-16,22,26,28],compute-6-[28,31-34],compute-7-[2,4-5,7]"]
-    "foo,bar"
-    "foo001,bar[123,125]
-    "foo[01-02        <- raises Exception
-    """
-    nodes = []
-
-    # Find all groups of "host","host[a,b]", "host[a-b]", etc...
-    p = re.compile(r'(?<=,)(?:[^,\]\[]+\[[^\]]+\]|[^,\]\[]+(?=,|$))')
-
-    # Check if string is valid
-    if p.sub("","," + node_str).replace(",","") != "":
-        raise Exception("Invalid node string: " + node_str)
+class Slurm:   
     
-    # Iter over all groups
-    for element in p.findall("," + node_str):
-        if '[' in element:
-            parts = element.split('[')
-
-            for sequence in parts[1].split(','):
-                sequence = sequence.rstrip(']')
-                if '-' in  sequence:
-                    numbers = sequence.split('-')
-
-                    for i in range(int(numbers[0]),int(numbers[1])+1):
-                        nodes.append(parts[0] + str(i).zfill(len(numbers[0])))
-                else:
-                    nodes.append(parts[0] + sequence)
-        else:
-            nodes += [element]
-    return nodes
-
-
-def getSeconds(time_str):
-    """
-    Convert a string of the form '%d-%H:%M:%S', '%H:%M:%S' or '%M:%S'
-    to seconds.
-    """
-    # sometimes the timestamp includs a fractional second part
-    time_str = time_str.split('.')[0]
-
-    if '-' in time_str:
-        days, time_str = time_str.split('-')
-        st = time.strptime(time_str, '%H:%M:%S')
-        sec = int(days)*86400+st.tm_hour*3600+st.tm_min*60+st.tm_sec
-    else:
-        try:
-            st = time.strptime(time_str, '%H:%M:%S')
-            sec = st.tm_hour*3600+st.tm_min*60+st.tm_sec
-        except ValueError:
-            try:
-                st = time.strptime(time_str, '%M:%S')
-                sec = st.tm_min*60+st.tm_sec
-            except ValueError:
-                logging.info('String: %s does not match time format.' % time_str)
-                return -1
-
-    return sec
-
-
-
-def datetimeFromIsoStr(dt_str):
-    """
-    Convert a iso time string to datetime. 
-    """
-    dt_split = dt_str.split(".")
-    # why the parameter unfold?
-    return datetime.datetime(*(time.strptime(dt_split[0], "%Y-%m-%dT%H:%M:%S")[0:6]))
-
-
-
-def createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_mappings, idtimestamp):
-    """
-    Creates a Usage Record object given a slurm log entry.
-    """
-
-    # extract data from the workload trace (log_entry)
-    job_id       = str(log_entry[0])
-    user_name    = getpwuid(int(log_entry[1]))[0]
-    queue        = log_entry[2]
-    submit_time  = time.mktime(datetimeFromIsoStr(log_entry[3]).timetuple())
-    start_time   = time.mktime(datetimeFromIsoStr(log_entry[4]).timetuple())
-    end_time     = time.mktime(datetimeFromIsoStr(log_entry[5]).timetuple())
-    account_name = log_entry[6]
-    utilized_cpu = getSeconds(log_entry[8])
-    wall_time    = getSeconds(log_entry[7])
-    core_count   = log_entry[9]
-    hosts        = getNodes(log_entry[10])
-    node_count   = log_entry[11]
-
-    # clean data and create various composite entries from the work load trace
-    job_identifier = job_id
-    fqdn_job_id = hostname + ':' + job_id
-    if idtimestamp:
-        record_id_timestamp = re.sub("[-:TZ]","",usagerecord.epoch2isoTime(start_time)) # remove characters
-        record_id = fqdn_job_id + ':' + record_id_timestamp
-    else:
-        record_id = fqdn_job_id
-
-    if not user_name in user_map:
-        missing_user_mappings[user_name] = True
-
-    vo_info = []
-    if account_name is not None:
-        mapped_project = project_map.get(account_name)
-        if mapped_project is not None:
-            voi = usagerecord.VOInformation()
-            voi.type = 'lrmsurgen-projectmap'
-            voi.name = mapped_project
-            vo_info = [voi]
-
-    ## fill in usage record fields
-    ur = usagerecord.UsageRecord()
-    ur.record_id        = record_id
-    ur.local_job_id     = job_identifier
-    ur.global_job_id    = fqdn_job_id
-    ur.local_user_id    = user_name
-    ur.global_user_name = user_map.get(user_name)
-    ur.machine_name     = hostname
-    ur.queue            = queue
-    ur.processors       = core_count
-    ur.node_count       = node_count
-    ur.host             = ','.join(hosts)
-    ur.submit_time      = usagerecord.epoch2isoTime(submit_time)
-    ur.start_time       = usagerecord.epoch2isoTime(start_time)
-    ur.end_time         = usagerecord.epoch2isoTime(end_time)
-    ur.cpu_duration     = utilized_cpu
-    ur.wall_duration    = wall_time
-    ur.project_name     = account_name
-    ur.vo_info         += vo_info
-
-    return ur
-
-
-
-def getGeneratorState(cfg):
-    """
-    Get state of where to the UR generation has reached in the log.
-    This is returns the last jobid processed from the database.
-    """
-    state_file = getStateFileLocation(cfg)
-    if not os.path.exists(state_file):
-        # no statefile -> we start from 50000 seconds / 5.7 days ago
-        dt = datetime.datetime.now()-datetime.timedelta(seconds=50000)
-        return dt.isoformat().split('.')[0]
-
-    return open(state_file).readline().strip() # state is only on the first line
-
-
-
-def writeGeneratorState(cfg, state_time):
-    """
-    Write the state of where the logs have been parsed to.
-    This is a job id from the database.
-    """
-    state_file = getStateFileLocation(cfg)
-
-    dirpath = os.path.dirname(state_file)
-    if not os.path.exists(dirpath):
-        os.makedirs(dirpath, mode=0750)
-
-    f = open(state_file, 'w')
-    f.write(state_time)
-    f.close()
-
-
-
-def generateUsageRecords(cfg, hostname, user_map, project_map, idtimestamp):
-    """
-    Starts the UR generation process.
-    """
-    start_time = getGeneratorState(cfg)
+    state = None
+    cfg = None
     missing_user_mappings = {}
+    idtimestamp = DEFAULT_IDTIMESTAMP
+    
+    def __init__(self,cfg):
+        self.cfg = cfg
+        self.idtimestamp = cfg.getConfigValueBool(SECTION, IDTIMESTAMP, DEFAULT_IDTIMESTAMP)
+        
+    def getStateFile(self):
+        return self.cfg.getConfigValue(SECTION, STATEFILE, DEFAULT_STATEFILE)
+    
+    def getNodes(self,node_str):
+        """
+        Makes a list of nodes from strings like:
 
-    tlp = SlurmBackend(start_time, not idtimestamp)
-    end_time = tlp.end_str
+        "brother[13-14]"
+        "brother13"
+        "brother[13-14,16,19]"
+        "brother[13-18]"
+        "compute-3-29"
+        "compute-10-[11,13-14,16]",
+        "compute-1-[0-1,3-18,20-24,26,28-30,32],compute-11-12,compute-13-[25-26,28-32],compute-14-[1-12,15,30-31],compute-2-[1-2,6-18,21,23,26-29],compute-4-[4-5,7-9,12-13,15-18,20-21,23-28,30-34],compute-5-[2,5,9-11,13,15-16,22,26,28],compute-6-[28,31-34],compute-7-[2,4-5,7]"]
+        """
+        nodes = []
+        if '],' in node_str:
+            elements = node_str.split('],')
+        else:
+            elements = [node_str]
 
-    while True:
+        for element in elements:
+            if '[' in element:
+                parts = element.split('[')
 
-        log_entry = tlp.getNextLogEntry()
+                for sequence in parts[1].split(','):
+                    sequence = sequence.rstrip(']')
+                    if '-' in  sequence:
+                        numbers = sequence.split('-')
 
-        if log_entry is None:
-            break # no more log entries
+                        for i in range(int(numbers[0]),int(numbers[1])+1):
+                            nodes.append(parts[0] + str(i))
+                    else:
+                        nodes.append(parts[0] + sequence)
+            else:
+                nodes += [element]
 
-        ur = createUsageRecord(log_entry, hostname, user_map, project_map, missing_user_mappings, idtimestamp)
-        log_dir = config.getConfigValue(cfg, config.SECTION_COMMON, config.LOGDIR, config.DEFAULT_LOG_DIR)
-        ur_dir = os.path.join(log_dir, 'urs')
-        if not os.path.exists(ur_dir):
-            os.makedirs(ur_dir)
+        return nodes
 
-        ur_file = os.path.join(ur_dir, ur.record_id)
-        ur.writeXML(ur_file)
+    def createUsageRecord(self, log_entry, hostname, user_map, project_map):
+        """
+        Creates a Usage Record object given a slurm log entry.
+        """
+        
+        if log_entry[1] == '' or log_entry[2] == '':
+            return None
 
-        logging.info('Wrote usage record to %s' % ur_file)
+        # extract data from the workload trace (log_entry)
+        job_id       = str(log_entry[0])
+        user_name    = getpwuid(int(log_entry[1]))[0]
+        queue        = log_entry[2]
+        submit_time  = time.mktime(common.datetimeFromIsoStr(log_entry[3]).timetuple())
+        start_time   = time.mktime(common.datetimeFromIsoStr(log_entry[4]).timetuple())
+        end_time     = time.mktime(common.datetimeFromIsoStr(log_entry[5]).timetuple())
+        account_name = log_entry[6]
+        utilized_cpu = common.getSeconds(log_entry[8])
+        wall_time    = common.getSeconds(log_entry[7])
+        core_count   = log_entry[9]
+        hosts        = self.getNodes(log_entry[10])
 
-    writeGeneratorState(cfg, end_time)
+        # clean data and create various composite entries from the work load trace
+        job_identifier = job_id
+        fqdn_job_id = hostname + ':' + job_id
+        if self.idtimestamp:
+            record_id_timestamp = re.sub("[-:TZ]","",usagerecord.epoch2isoTime(start_time)) # remove characters
+            record_id = fqdn_job_id + ':' + record_id_timestamp
+        else:
+            record_id = fqdn_job_id
 
-    suppress_usermap_info = config.getConfigValueBool(cfg,
-            config.SECTION_COMMON, config.SUPPRESS_USERMAP_INFO,
-            config.DEFAULT_SUPPRESS_USERMAP_INFO)
+        if not user_name in user_map.getMapping():
+            self.missing_user_mappings[user_name] = True
 
-    if missing_user_mappings and not suppress_usermap_info:
-        users = ','.join(missing_user_mappings)
-        logging.info('Missing user mapping for the following users: %s' % users)
+        vo_info = []
+        if account_name is not None:
+            mapped_project = project_map.get(account_name)
+            if mapped_project is not None:
+                voi = usagerecord.VOInformation()
+                voi.type = 'lrmsurgen-projectmap'
+                voi.name = mapped_project
+                vo_info = [voi]
+
+        ## fill in usage record fields
+        ur = usagerecord.UsageRecord()
+        ur.record_id        = record_id
+        ur.local_job_id     = job_identifier
+        ur.global_job_id    = fqdn_job_id
+        ur.local_user_id    = user_name
+        ur.global_user_name = user_map.get(user_name)
+        ur.machine_name     = hostname
+        ur.queue            = queue
+        ur.processors       = core_count
+        ur.node_count       = len(hosts)
+        ur.host             = ','.join(hosts)
+        ur.submit_time      = usagerecord.epoch2isoTime(submit_time)
+        ur.start_time       = usagerecord.epoch2isoTime(start_time)
+        ur.end_time         = usagerecord.epoch2isoTime(end_time)
+        ur.cpu_duration     = utilized_cpu
+        ur.wall_duration    = wall_time
+        ur.project_name     = account_name
+        ur.vo_info         += vo_info
+
+        return ur
+
+    def generateUsageRecords(self, hostname, user_map, project_map):
+        """
+        Starts the UR generation process.
+        """
+        self.missing_user_mappings = {}
+
+        tlp = SlurmBackend(self.state, self.cfg.getConfigValue(SECTION, MAX_DAYS, MAX_DAYS_DEFAULT))
+        
+        log_dir = self.cfg.getConfigValue(config.SECTION_COMMON, config.LOGDIR, config.DEFAULT_LOG_DIR)
+        count = 0
+        while True:
+            log_entry = tlp.getNextLogEntry()
+
+            if log_entry is None:
+                break # no more log entries
+
+            ur = self.createUsageRecord(log_entry, hostname, user_map, project_map)
+            
+            if ur is not None: 
+                common.writeUr(ur,self.cfg)            
+                count = count + 1
+            
+        # only update state if a entry i written
+        if count > 0:
+            self.state = tlp.end_str
+            
+        logging.info('Total number of UR written = %d' % count)
+
+    def parseGeneratorState(self,state):        
+        """
+        Get state of where to the UR generation has reached in the log.
+        This is returns the last jobid processed.
+        """
+        if state is None or len(state) == 0:
+            # no statefile -> we start from 50000 (DEFAULT_STATEFILE_DEFAULT) seconds / 5.7 days ago
+            sfd = int(self.cfg.getConfigValue(SECTION, STATEFILE_DEFAULT, DEFAULT_STATEFILE_DEFAULT))
+            dt = datetime.datetime.now()-datetime.timedelta(seconds=sfd)
+            state = dt.isoformat().split('.')[0]
+
+        self.state = state
+
+    def createGeneratorState(self):
+        return self.state
 
