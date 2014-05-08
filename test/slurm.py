@@ -48,6 +48,11 @@ class MyConfig():
                 return bart.slurm.DEFAULT_STATEFILE_DEFAULT
         raise Exception("getConfigValue")        
 
+    def getConfigValueBool(self,section,value,default=None):
+        if section == bart.slurm.SECTION and value == bart.slurm.IDTIMESTAMP:
+                return bart.slurm.DEFAULT_IDTIMESTAMP
+        raise Exception("getConfigValue")        
+
 class TestSequenceFunctions(unittest.TestCase):
 
     def setUp(self):
@@ -68,7 +73,7 @@ class TestSequenceFunctions(unittest.TestCase):
         project_map = BartMapFile()
         ur = self.slurm.createUsageRecord(log_entry,'hostname.example.com',user_map,project_map)
         
-        self.assertEqual(ur.record_id, "hostname.example.com:90560", "bad record_id")
+        self.assertEqual(ur.record_id, "hostname.example.com:90560:20120612224103", "bad record_id")
         self.assertEqual(ur.local_job_id, "90560", "bad local_job_id")
         self.assertEqual(ur.global_job_id, "hostname.example.com:90560", "bad global_job_id")
         self.assertEqual(ur.local_user_id, getpwuid(1000)[0], "bad local_user_id")
