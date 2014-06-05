@@ -11,7 +11,8 @@ import os
 import time
 import logging
 
-from bart import common, usagerecord
+from bart import common
+from bart.usagerecord import usagerecord
 
 MAUI_DATE_FORMAT = '%a_%b_%d_%Y'
 STATS_DIR        = 'stats'

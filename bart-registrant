@@ -32,6 +32,7 @@ from twisted.web import client
 
 from bart import urelements as ur
 
+from bart.usagerecord import verify
 
 # Nasty global so we can do proper exit codes
 ERROR = False
@@ -258,6 +259,10 @@ def createRegistrationPointsMapping(logdir, logpoints_all, logpoints_vo):
             ur = ET.parse(filepath)
         except Exception:
             log.msg('Error parsing file %(filepath)s, continuing' % {'filepath' : filepath})
+            continue
+        
+        if verify.verify(ur) is False:
+            log.msg('Error verifing file %(filepath)s, continuing' % {'filepath' : filepath})
             continue
 
         vos = getVONamesFromUsageRecord(ur)

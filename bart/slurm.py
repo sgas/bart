@@ -16,7 +16,8 @@ import subprocess
 import sys
 import re
 
-from bart import config, usagerecord, common
+from bart import config, common
+from bart.usagerecord import usagerecord
 from pwd import getpwuid
 
 SECTION = 'slurm'

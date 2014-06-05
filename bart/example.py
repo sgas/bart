@@ -11,7 +11,8 @@ import datetime
 import logging
 import re
 
-from bart import usagerecord, common
+from bart import common
+from bart.usagerecord import usagerecord
 
 SECTION = 'example'
 

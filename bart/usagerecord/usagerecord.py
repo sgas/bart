@@ -10,7 +10,7 @@
 import time
 from bart import __version__
 
-from bart import urelements as ur
+from bart.usagerecord import urelements as ur
 
 try:
     from xml.etree import ElementTree as ET

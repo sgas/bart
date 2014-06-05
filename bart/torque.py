@@ -12,7 +12,8 @@ import os
 import time
 import logging
 
-from bart import common, usagerecord
+from bart import common
+from bart.usagerecord import usagerecord
 
 SECTION = 'torque'
 
