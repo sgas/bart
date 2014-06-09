@@ -243,7 +243,7 @@ class Torque:
                 try:
                     tlp.spoolToEntry(job_id)
                 except IOError, e:
-                    logging.warning('Error spooling log file at %s for date %s to %s (%s)' % (log_file, torque_date, job_id, str(e)) )
+                    logging.error('Error spooling log file at %s for date %s to %s (%s)' % (log_file, torque_date, job_id, str(e)) )
                     job_id = None
                     continue
 
@@ -253,7 +253,7 @@ class Torque:
                 except IOError, e:
                     if torque_date == torque_date_today: # todays entry might not exist yet
                         break
-                    logging.warning('Error reading log file at %s for date %s (%s)' % (log_file, torque_date, str(e)))
+                    logging.error('Error reading log file at %s for date %s (%s)' % (log_file, torque_date, str(e)))
                     break
 
                 if log_entry is None:

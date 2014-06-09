@@ -349,9 +349,9 @@ def createEPRegistrationMapping(endpoints, ctxFactory):
             if success and result is not None:
                 regmap[ep] = result
             elif success:
-                log.msg('Endpoint %s does not appear to have a registration service.' % ep)
+                log.err('Endpoint %s does not appear to have a registration service.' % ep)
             else:
-                log.msg('Error contacting service %s (%s)' % (ep, result.getErrorMessage()))
+                log.err('Error contacting service %s (%s)' % (ep, result.getErrorMessage()))
         return regmap
 
     defs = []
@@ -373,7 +373,7 @@ def insertUsageRecords(url, payload, ctxFactory):
     """
     def gotResponse(result, factory, url):
         if factory.status != '200':
-            log.msg("Reply from %s had other response code than 200 (%s)" % (url, factory.status))
+            log.err("Reply from %s had other response code than 200 (%s)" % (url, factory.status))
         return result
 
     d, f = httpRequest(url, method='POST', payload=payload, ctxFactory=ctxFactory)
@@ -406,7 +406,7 @@ def registerBatch(ep, url, logdir, filenames, ctxFactory):
             StateFile(logdir, fn).add(ep).write()
 
     def insertError(error):
-        log.msg("Error during batch insertion: %s" % error.getErrorMessage())
+        log.err("Error during batch insertion: %s" % error.getErrorMessage())
         return error
 
     ur_data = joinUsageRecordFiles(logdir, filenames)
@@ -441,7 +441,7 @@ def registerUsageRecords(mapping, logdir, ctxFactory, batch_size=DEFAULT_BATCH_S
 def _performURRegistration(regmap, urmap, logdir, ctxFactory, batch_size):
 
     if not regmap:
-        log.msg("Failed to get any service refs, not doing any registrations")
+        log.err("Failed to get any service refs, not doing any registrations")
         return defer.fail(Exception("Failed to get any service refs, not doing any registrations"))
 
     batch_sets = {}
@@ -482,7 +482,7 @@ def _performURRegistration(regmap, urmap, logdir, ctxFactory, batch_size):
         if isinstance(result, failure.Failure):
             # something went wrong in the registration - stop future registrations
             # split into to 2 lines (far easier to read in the log)
-            log.msg("Error registration records to %s" % used_service_endpoint)
+            log.err("Error registration records to %s" % used_service_endpoint)
             log.msg("Skipping all registrations to this endpoint for now")
             error_endpoints[used_service_endpoint] = True
 
@@ -576,7 +576,7 @@ def doMain():
     if cfg_file is not None:
         if (not os.path.exists(cfg_file)) or (not os.path.isfile(cfg_file)):
             serr = 'The path %s does not exist or is not a file' % cfg_file
-            log.msg(serr)
+            log.err(serr)
             return
     else:
         cfg_file = DEFAULT_CONFIG_FILE
@@ -608,11 +608,11 @@ def doMain():
     #log.msg(' Cert dir  : %s' % cert_dir)
 
     if not (log_all or log_vo):
-        log.msg('No log points given. Cowardly refusing to do anything')
+        log.err('No log points given. Cowardly refusing to do anything')
         return
 
     if not os.path.exists(log_dir):
-        log.msg('Log directory %s does not exist, bailing out.' % log_dir)
+        log.err('Log directory %s does not exist, bailing out.' % log_dir)
         return
 
     mapping = createRegistrationPointsMapping(log_dir, log_all, log_vo)
@@ -631,7 +631,7 @@ def main():
         global ERROR
         ERROR = True
         if error.type == SystemExit:
-            log.msg('SystemExit: %s' % error.value)
+            log.err('SystemExit: %s' % error.value)
         else:
             error.printTraceback()
 

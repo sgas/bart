@@ -9,7 +9,7 @@
 
 import re
 import ConfigParser
-import pprint
+import logging
 from optparse import OptionParser
 
 DEFAULT_CONFIG_FILE     = '/etc/bart/bart.conf'
@@ -58,13 +58,13 @@ class BartConfig:
         return self.cfg.sections()
 
     def getConfigValueBool(self, section, value, default=None):
-        value = self.getConfigValue(section, value, default);
-        if value.lower() in ('true', 'yes', '1'):
+        val = self.getConfigValue(section, value, default);
+        if val.lower() in ('true', 'yes', '1'):
             return True
-        elif value.lower() in ('false', 'no', '0'):
+        elif val.lower() in ('false', 'no', '0'):
             return False
         else:
-            logging.error('Invalid option for % (%)' % (value, idtimestamp))
+            logging.error('Invalid option for % (%)' % (value, val))
 
         if default is None:
             return False

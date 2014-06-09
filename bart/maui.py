@@ -276,7 +276,7 @@ class Maui():
                     continue
     
                 ur = self.createUsageRecord(log_entry, hostname, user_map, vo_map, maui_server_host)
-                common.writeUr(ur,cfg)
+                common.writeUr(ur,self.cfg)
                 
                 # write generated state
                 self.state_job_id = ur.job_id
@@ -303,7 +303,7 @@ class Maui():
             t_old = time.time() - (24 * 3600)
             log_file = time.strftime(MAUI_DATE_FORMAT, time.gmtime(t_old))
         else:
-            job_id, log_file = state_data.split(' ', 2)
+            job_id, log_file = state.split(' ', 2)
             if job_id == '-':
                 job_id = None
 

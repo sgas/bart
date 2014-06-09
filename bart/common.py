@@ -77,7 +77,7 @@ def getSeconds(time_str):
                 st = time.strptime(time_str, '%M:%S')
                 sec = st.tm_min*60+st.tm_sec
             except ValueError:
-                logging.info('String: %s does not match time format.' % time_str)
+                logging.error('String: %s does not match time format.' % time_str)
                 return -1
 
     return sec
