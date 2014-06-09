@@ -32,7 +32,7 @@ IDTIMESTAMP = 'idtimestamp'
 DEFAULT_IDTIMESTAMP = 'false'
 
 MAX_DAYS = 'max_days'
-MAX_DAYS_DEFAULT = 0
+MAX_DAYS_DEFAULT = 7
 
 CONFIG = {
             STATEFILE:         { 'required': False },

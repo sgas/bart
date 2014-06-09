@@ -30,7 +30,7 @@ from twisted.internet import reactor, defer
 from twisted.python import log, usage, failure
 from twisted.web import client
 
-from bart import urelements as ur
+from bart.usagerecord import urelements as ur
 
 from bart.usagerecord import verify
 
@@ -219,7 +219,7 @@ def parseURLifeTime(value):
     return ur_lifetime_seconds
 
 
-def getVONamesFromUsageRecord(ur):
+def getVONamesFromUsageRecord(ure):
     """
     Return the VO name element values of a usage record.
     """
@@ -228,7 +228,7 @@ def getVONamesFromUsageRecord(ur):
     # so we do it the silly way and iterate over the tree instead.
 
     vos = []
-    for e in ur.getroot():
+    for e in ure.getroot():
         if e.tag == ur.USER_IDENTITY:
             for f in e:
                 if f.tag == ur.VO:
@@ -256,16 +256,16 @@ def createRegistrationPointsMapping(logdir, logpoints_all, logpoints_vo):
             continue
 
         try:
-            ur = ET.parse(filepath)
+            ure = ET.parse(filepath)
         except Exception:
             log.msg('Error parsing file %(filepath)s, continuing' % {'filepath' : filepath})
             continue
         
-        if verify.verify(ur) is False:
+        if verify.verify(ure.getroot()) is False:
             log.msg('Error verifing file %(filepath)s, continuing' % {'filepath' : filepath})
             continue
 
-        vos = getVONamesFromUsageRecord(ur)
+        vos = getVONamesFromUsageRecord(ure)
 
         for lp in logpoints_all:
             mapping.setdefault(lp, []).append(filename)
@@ -391,8 +391,8 @@ def joinUsageRecordFiles(logdir, filenames):
         if os.path.getsize(filepath) == 0:
             log.msg("Skipping file %s for transmit as it is empty" % fn)
             continue
-        ur = ET.parse(filepath)
-        urs.append(ur.getroot())
+        ure = ET.parse(filepath)
+        urs.append(ure.getroot())
 
     return ET.tostring(urs)
 

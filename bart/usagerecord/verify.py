@@ -9,12 +9,16 @@
 
 from bart.usagerecord import urparser
 
+from twisted.python import log
+
 def verify(ur):
     try:
         d = urparser.xmlToDict(ur)
         if d['record_id'] is None:
+            log.err("No record_id found")
             return False
     except:
+        log.err("Failed to convert UR XML into dict")
         return False
     return True
 

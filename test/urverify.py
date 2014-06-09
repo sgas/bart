@@ -43,6 +43,7 @@ class TestSequenceFunctions(unittest.TestCase):
     def verify(self,urdata):
         try:
             ur = ET.fromstring(urdata)
+            pprint.pprint(ur)
         except:
             return False
         return verify.verify(ur)

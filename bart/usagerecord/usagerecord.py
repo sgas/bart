@@ -100,22 +100,22 @@ class UsageRecord:
 
         # begin method
 
-        ur = ET.Element(ur.JOB_USAGE_RECORD)
+        ure = ET.Element(ur.JOB_USAGE_RECORD)
 
         assert self.record_id is not None, "No recordId specified, cannot generate usage record"
-        record_identity = ET.SubElement(ur, ur.RECORD_IDENTITY)
+        record_identity = ET.SubElement(ure, ur.RECORD_IDENTITY)
         record_identity.set(ur.RECORD_ID, self.record_id)
         record_identity.set(ur.CREATE_TIME, time.strftime(ISO_TIME_FORMAT, time.gmtime()) + 'Z')
 
         if self.global_job_id is not None or self.local_job_id is not None:
-            job_identity = ET.SubElement(ur, ur.JOB_IDENTITY)
+            job_identity = ET.SubElement(ure, ur.JOB_IDENTITY)
             if self.global_job_id is not None:
                 setElement(job_identity, ur.GLOBAL_JOB_ID, self.global_job_id)
             if self.local_job_id is not None:
                 setElement(job_identity, ur.LOCAL_JOB_ID, self.local_job_id)
 
         if self.global_user_name is not None or self.local_job_id is not None:
-            user_identity = ET.SubElement(ur, ur.USER_IDENTITY)
+            user_identity = ET.SubElement(ure, ur.USER_IDENTITY)
             if self.local_user_id is not None:
                 setElement(user_identity, ur.LOCAL_USER_ID, self.local_user_id)
             if self.global_user_name is not None:
@@ -140,36 +140,36 @@ class UsageRecord:
                     if capability is not None:
                         setElement(attr, ur.VO_CAPABILITY, capability)
 
-        if self.job_name       is not None :  setElement(ur, ur.JOB_NAME, self.job_name)
-        if self.charge         is not None :  setElement(ur, ur.CHARGE, self.charge)
-        if self.status         is not None :  setElement(ur, ur.STATUS, self.status)
-        if self.machine_name   is not None :  setElement(ur, ur.MACHINE_NAME, self.machine_name)
-        if self.queue          is not None :  setElement(ur, ur.QUEUE, self.queue)
-        if self.host           is not None :  setElement(ur, ur.HOST, self.host)
-        if self.node_count     is not None :  setElement(ur, ur.NODE_COUNT, self.node_count)
-        if self.processors     is not None :  setElement(ur, ur.PROCESSORS, self.processors)
-        if self.submit_host    is not None :  setElement(ur, ur.SUBMIT_HOST, self.submit_host)
-        if self.project_name   is not None :  setElement(ur, ur.PROJECT_NAME, self.project_name)
-        if self.submit_time    is not None :  setElement(ur, ur.SUBMIT_TIME, self.submit_time)
-        if self.start_time     is not None :  setElement(ur, ur.START_TIME, self.start_time)
-        if self.end_time       is not None :  setElement(ur, ur.END_TIME, self.end_time)
-        if self.wall_duration  is not None :  setElement(ur, ur.WALL_DURATION, "PT%fS" % self.wall_duration)
-        if self.cpu_duration   is not None :  setElement(ur, ur.CPU_DURATION, "PT%fS" % self.cpu_duration)
+        if self.job_name       is not None :  setElement(ure, ur.JOB_NAME, self.job_name)
+        if self.charge         is not None :  setElement(ure, ur.CHARGE, self.charge)
+        if self.status         is not None :  setElement(ure, ur.STATUS, self.status)
+        if self.machine_name   is not None :  setElement(ure, ur.MACHINE_NAME, self.machine_name)
+        if self.queue          is not None :  setElement(ure, ur.QUEUE, self.queue)
+        if self.host           is not None :  setElement(ure, ur.HOST, self.host)
+        if self.node_count     is not None :  setElement(ure, ur.NODE_COUNT, self.node_count)
+        if self.processors     is not None :  setElement(ure, ur.PROCESSORS, self.processors)
+        if self.submit_host    is not None :  setElement(ure, ur.SUBMIT_HOST, self.submit_host)
+        if self.project_name   is not None :  setElement(ure, ur.PROJECT_NAME, self.project_name)
+        if self.submit_time    is not None :  setElement(ure, ur.SUBMIT_TIME, self.submit_time)
+        if self.start_time     is not None :  setElement(ure, ur.START_TIME, self.start_time)
+        if self.end_time       is not None :  setElement(ure, ur.END_TIME, self.end_time)
+        if self.wall_duration  is not None :  setElement(ure, ur.WALL_DURATION, "PT%fS" % self.wall_duration)
+        if self.cpu_duration   is not None :  setElement(ure, ur.CPU_DURATION, "PT%fS" % self.cpu_duration)
         # sgas attributes
-        if self.user_time      is not None :  setElement(ur, ur.USER_TIME, "PT%fS" % self.user_time)
-        if self.kernel_time    is not None :  setElement(ur, ur.KERNEL_TIME, "PT%fS" % self.kernel_time)
-        if self.exit_code      is not None :  setElement(ur, ur.EXIT_CODE, self.exit_code)
+        if self.user_time      is not None :  setElement(ure, ur.USER_TIME, "PT%fS" % self.user_time)
+        if self.kernel_time    is not None :  setElement(ure, ur.KERNEL_TIME, "PT%fS" % self.kernel_time)
+        if self.exit_code      is not None :  setElement(ure, ur.EXIT_CODE, self.exit_code)
         if self.major_page_faults is not None :
-            setElement(ur, ur.MAJOR_PAGE_FAULTS, self.major_page_faults)
+            setElement(ure, ur.MAJOR_PAGE_FAULTS, self.major_page_faults)
         for renv in self.runtime_environments:
-            setElement(ur, ur.RUNTIME_ENVIRONMENT, renv)
+            setElement(ure, ur.RUNTIME_ENVIRONMENT, renv)
 
         # set logger name and version
-        logger_name = ET.SubElement(ur, ur.LOGGER_NAME)
+        logger_name = ET.SubElement(ure, ur.LOGGER_NAME)
         logger_name.text = LOGGER_NAME_VALUE
         logger_name.set(ur.LOGGER_VERSION, LOGGER_VERSION_VALUE)
 
-        return ET.ElementTree(ur)
+        return ET.ElementTree(ure)
 
 
     def writeXML(self, filename):
