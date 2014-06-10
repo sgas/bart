@@ -29,7 +29,7 @@ STATEFILE_DEFAULT = 'statefile_default'
 DEFAULT_STATEFILE_DEFAULT = 50000
 
 IDTIMESTAMP = 'idtimestamp'
-DEFAULT_IDTIMESTAMP = 'false'
+DEFAULT_IDTIMESTAMP = 'true'
 
 MAX_DAYS = 'max_days'
 MAX_DAYS_DEFAULT = 7
@@ -206,7 +206,6 @@ class Slurm:
 
         tlp = SlurmBackend(self.state, self.cfg.getConfigValue(SECTION, MAX_DAYS, MAX_DAYS_DEFAULT))
         
-        log_dir = self.cfg.getConfigValue(config.SECTION_COMMON, config.LOGDIR, config.DEFAULT_LOG_DIR)
         count = 0
         while True:
             log_entry = tlp.getNextLogEntry()
