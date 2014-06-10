@@ -51,7 +51,8 @@ class SlurmBackend:
 
         self.end_str = datetime.datetime.now().isoformat().split('.')[0]
         # Check if number of days since last run is > max_days, if so only
-        # advance max_days days     
+        # advance max_days days
+        max_days = int(max_days)     
         if max_days > 0 and datetime.datetime.now() - dateutil.parser.parse(state_starttime) > datetime.timedelta(days=max_days):
             self.end_str = dateutil.parser.parse(state_starttime) + datetime.timedelta(days=max_days)
             self.end_str = self.end_str.isoformat().split('.')[0]
