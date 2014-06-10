@@ -1,0 +1,21 @@
+
+== Example Backend ==
+
+The Example backend is an example implementation to use as a base for new LRMS
+modules for Bart.
+
+== Config options ==
+
+In the [example] section in the bart.conf file the following options are
+available.
+
+statefile: default=example.state
+Name of the state file where the Example backend saves how many jobs that are sent
+to SGAS.
+
+statefile_start: default=1
+The default value if no state file exists.
+
+idtimestamp: default=true
+Adds a timestamp to the recordid to be sure that recordid is unique if LRMS
+reuses the jobid.

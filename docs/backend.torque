@@ -1,0 +1,17 @@
+
+== Torque Backend ==
+
+The Torque backend reads the torque accounting files to provide accounting
+information for Bart.
+
+== Config options ==
+
+In the [maui] section in the bart.conf file the following options are
+available.
+
+statefile: default=maui.state
+Name of the state file where the Torque backend saves how many jobs that are sent
+to SGAS.
+
+spooldir: default=/var/spool/torque
+Maui spool dir.
