@@ -61,6 +61,11 @@ def getSeconds(time_str):
     Convert a string of the form '%d-%H:%M:%S', '%H:%M:%S' or '%M:%S'
     to seconds.
     """
+
+    # an empty string will never be a time...
+    if time_str == "":
+        return None
+
     # sometimes the timestamp includs a fractional second part
     time_str = time_str.split('.')[0]
 
@@ -78,7 +83,7 @@ def getSeconds(time_str):
                 sec = st.tm_min*60+st.tm_sec
             except ValueError:
                 logging.error('String: %s does not match time format.' % time_str)
-                return -1
+                return None
 
     return sec
 
