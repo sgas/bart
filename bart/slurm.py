@@ -80,7 +80,7 @@ class SlurmBackend:
 
         try:
             entry = self.results.pop(0)
-            return entry[:-1].split('|')
+            return entry.strip().split('|')
         except IndexError:
             return None
 
