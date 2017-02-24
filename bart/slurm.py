@@ -124,9 +124,10 @@ class Slurm:
                     sequence = sequence.rstrip(']')
                     if '-' in  sequence:
                         numbers = sequence.split('-')
+			numlength = len(numbers[0])
 
                         for i in range(int(numbers[0]),int(numbers[1])+1):
-                            nodes.append(parts[0] + str(i))
+			    nodes.append(parts[0] + "{:0>{width}}".format(i,width=numlength))
                     else:
                         nodes.append(parts[0] + sequence)
             else:
