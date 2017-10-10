@@ -2,6 +2,17 @@ SGAS BART ChangeLog
 
 008:
 
+Changed default behavior of idtimestamp to true and moved config 
+option into the [slurm] module.
+
+Bart do exits with error code if something goes wrong (Fixes #1)
+
+Diffrent errors gives diffrent severity in log files (Fixes #2)
+
+Client side verification of UR XML before sending (Fixes #4)
+
+Rewritten the LRMS modules for easier maintainance (Fixes #3)
+
 Changed how slurm reports number of nodes.
 This change the output format from the sacct command.
 

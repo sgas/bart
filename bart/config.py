@@ -78,8 +78,6 @@ class BartConfig:
        
     # Check for missing items and check syntax
     def validate(self,section,lrms):
-        print lrms
-            
         for key in lrms.CONFIG:
             item = lrms.CONFIG[key]
             value = self.getConfigValue(section, key, None) 
