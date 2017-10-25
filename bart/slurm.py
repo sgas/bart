@@ -140,7 +140,7 @@ class Slurm:
         Creates a Usage Record object given a slurm log entry.
         """
         
-        if log_entry[1] == '' or log_entry[2] == '':
+        if log_entry[1] == '' or log_entry[2] == '' or log_entry[7] == '00:00:00':
             return None
 
         # extract data from the workload trace (log_entry)
@@ -151,7 +151,7 @@ class Slurm:
         start_time   = time.mktime(common.datetimeFromIsoStr(log_entry[4]).timetuple())
         end_time     = time.mktime(common.datetimeFromIsoStr(log_entry[5]).timetuple())
         account_name = log_entry[6]
-        utilized_cpu = common.getSeconds(log_entry[8])
+        utilized_cpu = common.getSeconds(log_entry[8] or '00:00:00')
         wall_time    = common.getSeconds(log_entry[7])
         core_count   = log_entry[9]
         hosts        = self.getNodes(log_entry[10])
