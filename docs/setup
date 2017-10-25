@@ -17,12 +17,13 @@ are daemons.
 * Twisted Core and Web (http://twistedmatrix.com/)
 * PyOpenSSL (https://launchpad.net/pyopenssl)
 * ElementTree (http://effbot.org/zone/element-index.htm - only needed with Python 2.4)
+* Python dateutil
 
 Debian/Ubuntu package names: python-twisted python-twisted-web python-openssl
-                             (python-elementtree)
+                             python-dateutil (python-elementtree)
 
 CentOS/RedHat package names: python-twisted-core python-twisted-web pyOpenSSL
-                             (python-elementtree)
+                             python-dateutil (python-elementtree)
 
 == Installation ==
 
