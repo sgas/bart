@@ -61,6 +61,10 @@ def getSeconds(time_str):
     Convert a string of the form '%d-%H:%M:%S', '%H:%M:%S' or '%M:%S'
     to seconds.
     """
+
+    if not time_str:
+        return 0
+
     # sometimes the timestamp includs a fractional second part
     time_str = time_str.split('.')[0]
 
