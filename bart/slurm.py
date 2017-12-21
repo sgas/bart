@@ -65,12 +65,8 @@ class SlurmBackend:
             self.results = process.readlines()
         else:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-            data = ''
-            while process.poll() is None:
-                stdoutdata, _ = process.communicate()
-                data += stdoutdata
-            data = data.strip()
-            self.results = data.split('\n')
+            data, _ = process.communicate()
+            self.results = data.strip().split('\n')
 
         # remove description line
         self.results = self.results[1:]
