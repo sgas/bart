@@ -36,12 +36,21 @@ def main():
         print "Can't read config file: %s" % options.config 
         sys.exit(1)
 
-	# open logfile
+    # Log level
+    if options.debug:
+        loglevel = "DEBUG"
+    else:
+        loglevel = cfg.getConfigValue(config.SECTION_COMMON, config.LOGLEVEL, config.DEFAULT_LOG_LEVEL)
+        if loglevel not in config.VALID_LOGLEVELS:
+            sys.stderr.write("Unknown loglevel '%s' in config file %s\nValid log elevels are %s\n" % (loglevel, options.config, ', '.join(config.VALID_LOGLEVELS)))
+            sys.exit(1)
+
+    # open logfile
     logfile = options.logfile
     if logfile is None:
         logfile = cfg.getConfigValue(config.SECTION_COMMON, config.LOGFILE, config.DEFAULT_LOG_FILE)
 
-    logging.basicConfig(filename=logfile, format=LOG_FORMAT, level=logging.DEBUG)
+    logging.basicConfig(filename=logfile, format=LOG_FORMAT, level=loglevel)
 
     # Load user map file
     user_map = BartMapFile()
