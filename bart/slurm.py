@@ -41,7 +41,42 @@ CONFIG = {
             MAX_DAYS:          { 'required': False, type: 'int' },
           }
 
-COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --state=ca,cd,f,nf,pr,rq,to --starttime="%s" --endtime="%s"'
+COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --state=%s --starttime="%s" --endtime="%s"'
+
+def exec_cmd(cmd):
+    """
+    Execute the shell command 'cmd', and return the output
+    """
+
+    logging.debug("Executing command '%s'" % cmd)
+
+    # subprocess can be more than 10x times slower than popen in python2.4
+    if sys.version_info < (2, 5):
+        process = os.popen(cmd)
+        return process.readlines()
+    else:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        data, _ = process.communicate()
+        return data.strip().split('\n')
+
+
+def versioncmp(a, b):
+    """
+    return -1 if a < b, 0 if a = b, and +1 if a > b, where a and b are
+    version number strings of the format "X.Y.Z"
+    """
+
+    aa = [ int(x) for x in a.split('.') ]
+    bb = [ int(x) for x in b.split('.') ]
+
+    for i in range(3):
+        if aa[i] < bb[i]:
+            return -1
+        elif aa[i] > bb[i]:
+            return 1
+
+    return 0
+
 
 class SlurmBackend:
     """
@@ -57,17 +92,13 @@ class SlurmBackend:
             self.end_str = dateutil.parser.parse(state_starttime) + datetime.timedelta(days=max_days)
             self.end_str = self.end_str.isoformat().split('.')[0]
 
-        command = COMMAND % (state_starttime, self.end_str)
-
-        # subprocess can be more than 10x times slower than popen in python2.4
-        if sys.version_info < (2, 5):
-            process = os.popen(command)
-            self.results = process.readlines()
+        sacct_version = exec_cmd("sacct --version")[0].split(' ')[1]
+        if versioncmp(sacct_version, "17.11.0") < 0:
+            command = COMMAND % ('ca,cd,f,nf,pr,rq', state_starttime, self.end_str)
         else:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-            data, _ = process.communicate()
-            self.results = data.strip().split('\n')
+            command = COMMAND % ('ca,cd,f,nf,pr,rq,to', state_starttime, self.end_str)
 
+        self.results = exec_cmd(command)
         # remove description line
         self.results = self.results[1:]
 
