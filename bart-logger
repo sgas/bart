@@ -5,7 +5,9 @@
 #
 # Author: Henrik Thostrup Jensen <htj@ndgf.org>
 # Author: Magnus Jonsson <magnus@hpc2n.umu.se>
-# Copyright: Nordic Data Grid Facility (2009, 2010)
+# Author: Erik Edelmann <edelmann@csc.fi>
+# Copyright: Nordic Data Grid Facility (2009, 2010),
+#            Nordic e-Infrastructure Collaboration (2018)
 
 import os
 import sys
