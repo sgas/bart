@@ -25,7 +25,7 @@ def main():
     options, args = parser.parse_args()
     if not os.path.exists(options.config):
         # we don't have logging yet
-        print 'Configuration file %s does not exist' % options.config
+        sys.stderr.write('Configuration file %s does not exist\n' % options.config)
         sys.exit(1)
 
     # read config file
@@ -33,7 +33,7 @@ def main():
     try:
         cfg = BartConfig(options.config)
     except:
-        print "Can't read config file: %s" % options.config 
+        sys.stderr.write("Can't read config file: %s\n" % options.config)
         sys.exit(1)
 
     # Log level
