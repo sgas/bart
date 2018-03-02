@@ -25,17 +25,13 @@ def main():
     # start with command line parsing and various setups
     parser = config.getParser()
     options, args = parser.parse_args()
-    if not os.path.exists(options.config):
-        # we don't have logging yet
-        sys.stderr.write('Configuration file %s does not exist\n' % options.config)
-        sys.exit(1)
 
     # read config file
     cfg = None
     try:
         cfg = BartConfig(options.config)
-    except:
-        sys.stderr.write("Can't read config file: %s\n" % options.config)
+    except Exception as e:
+        sys.stderr.write("Can't read config file: %s\n" % e)
         sys.exit(1)
 
     # Log level
@@ -44,7 +40,8 @@ def main():
     else:
         loglevel = cfg.getConfigValue(config.SECTION_COMMON, config.LOGLEVEL, config.DEFAULT_LOG_LEVEL)
         if loglevel not in config.VALID_LOGLEVELS:
-            sys.stderr.write("Unknown loglevel '%s' in config file %s\nValid log elevels are %s\n" % (loglevel, options.config, ', '.join(config.VALID_LOGLEVELS)))
+            sys.stderr.write("Unknown loglevel '%s' in config file %s\nValid log elevels are %s\n" %
+                             (loglevel, options.config, ', '.join(config.VALID_LOGLEVELS)))
             sys.exit(1)
 
     # open logfile

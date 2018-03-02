@@ -8,6 +8,7 @@
 # Copyright: Nordic Data Grid Facility (2009, 2010)
 
 import re
+import os
 import ConfigParser
 import logging
 from optparse import OptionParser
@@ -48,8 +49,14 @@ def getParser():
 
 class BartConfig:
     def __init__(self,config_file):
+
+        if not os.path.exists(config_file):
+            raise IOError('Configuration file %s does not exist\n' % config_file)
+
         self.cfg = ConfigParser.ConfigParser()
-        self.cfg.read(config_file)
+        r = self.cfg.read(config_file)
+        if not r:
+            raise IOError("Reading config file %s failed, for some reason" % config_file)
 
     def getConfigValue(self, section, value, default=None):
         try:
