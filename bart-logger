@@ -52,7 +52,6 @@ def main():
     logging.basicConfig(filename=logfile, format=LOG_FORMAT, level=loglevel)
 
     stderr_level =  cfg.getConfigValue(config.SECTION_COMMON, config.STDERR_LEVEL, config.DEFAULT_STDERR_LEVEL)
-    print 'stderr_level = ', stderr_level
     if stderr_level:
         stderr_handler = logging.StreamHandler()
         stderr_handler.setLevel(stderr_level)
