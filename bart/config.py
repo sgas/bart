@@ -21,6 +21,7 @@ DEFAULT_LOG_DIR         = '/var/spool/bart/usagerecords'
 DEFAULT_STATEDIR        = '/var/spool/bart'
 DEFAULT_SUPPRESS_USERMAP_INFO = 'false'
 DEFAULT_LOG_LEVEL       = 'INFO'
+DEFAULT_STDERR_LEVEL    = None
 
 # Common section
 SECTION_COMMON = 'common'
@@ -31,6 +32,7 @@ VOMAP      = 'vomap'
 LOGDIR     = 'logdir'
 LOGFILE    = 'logfile'
 LOGLEVEL   = 'loglevel'
+STDERR_LEVEL = 'stderr_level'
 STATEDIR   = 'statedir'
 SUPPRESS_USERMAP_INFO = 'suppress_usermap_info'
 
