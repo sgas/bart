@@ -57,10 +57,6 @@ def main():
         stderr_handler.setLevel(stderr_level)
         logging.getLogger().addHandler(stderr_handler)
 
-    logging.error("Error test")
-    logging.warning("warning test")
-    logging.info("info test")
-
     # Load user map file
     user_map = BartMapFile()
     try:
