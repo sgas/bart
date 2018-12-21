@@ -3,8 +3,8 @@ BaRT - Batch system Reporting Tool
 Tool for generating usage records from LRMS logs and registering the records to
 SGAS.
 
-Currently Maui and Torque are the supported LRMS.
-Support for SLURM and Load Leveler as planned.
+Currently SLRUM, Maui and Torque are the supported LRMS.
+Support for Load Leveler is planned.
 
 
 For installation instructions, see docs/setup
