@@ -75,7 +75,8 @@ def versioncmp(a, b):
         elif aa[i] > bb[i]:
             return 1
 
-    return 0
+    ## If we get here, all common components are equal. Decide by the number of components:
+    return cmp(a_length, b_length)
 
 
 class SlurmBackend:
