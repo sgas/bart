@@ -63,19 +63,20 @@ def exec_cmd(cmd):
 def versioncmp(a, b):
     """
     return -1 if a < b, 0 if a = b, and +1 if a > b, where a and b are
-    version number strings of the format "X.Y.Z"
+    version number strings of the format "A.B.C[-D]" and A, B, C, D are numbers
     """
 
-    aa = [ int(x) for x in a.split('.') ]
-    bb = [ int(x) for x in b.split('.') ]
+    aa = [ int(x) for x in re.findall(r"\d+", a) ]
+    bb = [ int(x) for x in re.findall(r"\d+", b) ]
 
-    for i in range(3):
+    for i in range(min(len(aa), len(bb))):
         if aa[i] < bb[i]:
             return -1
         elif aa[i] > bb[i]:
             return 1
 
-    return 0
+    ## If we get here, all common components are equal. Decide by the number of components:
+    return cmp(a_length, b_length)
 
 
 class SlurmBackend:
