@@ -34,14 +34,18 @@ DEFAULT_IDTIMESTAMP = 'true'
 MAX_DAYS = 'max_days'
 MAX_DAYS_DEFAULT = 7
 
+BILLING_UNIT         = 'billing_unit'
+DEFAULT_BILLING_UNIT = 'cpu'
+
 CONFIG = {
             STATEFILE:         { 'required': False },
             STATEFILE_DEFAULT: { 'required': False, type: 'int' },
             IDTIMESTAMP:       { 'required': False, type: 'bool' },
             MAX_DAYS:          { 'required': False, type: 'int' },
+            BILLING_UNIT:      { 'required': False },
           }
 
-COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocCPUS,Nodelist --state=%s --starttime="%s" --endtime="%s"'
+COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist --state=%s --starttime="%s" --endtime="%s"'
 
 def exec_cmd(cmd):
     """
@@ -122,7 +126,8 @@ class Slurm:
     def __init__(self,cfg):
         self.cfg = cfg
         self.idtimestamp = cfg.getConfigValueBool(SECTION, IDTIMESTAMP, DEFAULT_IDTIMESTAMP)
-        
+        self.billing_unit = cfg.getConfigValue(SECTION, BILLING_UNIT, DEFAULT_BILLING_UNIT)
+
     def getStateFile(self):
         return self.cfg.getConfigValue(SECTION, STATEFILE, DEFAULT_STATEFILE)
     
@@ -163,6 +168,37 @@ class Slurm:
 
         return nodes
 
+    def extractBillingUnit(self, tres):
+        """
+        Extracts the configured billing unit from a TRES field.
+        """
+
+        if tres == '':
+            return 0
+
+        # Transforms a string 'billing=5,cpu=2,mem=24G,node=1' into a dict
+        # { 'billing': 5, 'cpu': 2, 'mem': '24G', 'node': 1 }
+        tresdict = dict((k.strip(), v.strip()) for k, v in
+                        (item.split('=') for item in tres.split(',')))
+
+        ## Extract the configured unit
+        value = tresdict[self.billing_unit]
+
+        ## Convert memory to MiB, if needed
+        if self.billing_unit == 'mem':
+            if value.endswith('M'):
+                value = int(value[:-1])
+            elif value.endswith('G'):
+                value = int(value[:-1]) * 1024
+            elif value.endswith('T'):
+                value = int(value[:-1]) * 1024**2
+            else:
+                value = int(value)
+        else:
+            value = int(value)
+
+        return value
+
     def createUsageRecord(self, log_entry, hostname, user_map, project_map):
         """
         Creates a Usage Record object given a slurm log entry.
@@ -181,7 +217,7 @@ class Slurm:
         account_name = log_entry[6]
         utilized_cpu = common.getSeconds(log_entry[8])
         wall_time    = common.getSeconds(log_entry[7])
-        core_count   = log_entry[9]
+        core_count   = self.extractBillingUnit(log_entry[9])
         hosts        = self.getNodes(log_entry[10])
 
         # clean data and create various composite entries from the work load trace
