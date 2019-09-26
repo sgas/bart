@@ -182,7 +182,7 @@ class Slurm:
                         (item.split('=') for item in tres.split(',')))
 
         ## Extract the configured unit
-        value = tresdict[self.billing_unit]
+        value = tresdict.get(self.billing_unit,0)
 
         ## Convert memory to MiB, if needed
         if self.billing_unit == 'mem':
