@@ -39,7 +39,7 @@ ERROR = False
 
 
 # static file locations
-LOG_FILENAME           = '/var/log/bart-registration.log'
+DEFAULT_LOG_FILENAME           = '/var/log/bart-registration.log'
 
 # config sections
 CONFIG_SECTION_COMMON  = 'common'
@@ -77,8 +77,10 @@ ARCHIVE_DIRECTORY = 'archive'
 class CommandLineOptions(usage.Options):
 
     optFlags = [ ['stdout', 's', 'Log to stdout'] ]
-    optParameters = [ ['config-file', 'c', None, 'Config file to use (typically /etc/bart/bart.conf)'] ]
-
+    optParameters = [
+        ['config-file', 'c', None, 'Config file to use (typically /etc/bart/bart.conf)'],
+        ['log-file', 'l', DEFAULT_LOG_FILENAME, 'Log file' ]
+    ]
 
 class StateFile:
     """
@@ -570,7 +572,7 @@ def doMain():
     if cmd_cfg['stdout']:
         log.startLogging(sys.stdout)
     else:
-        log.startLogging(open(LOG_FILENAME, 'a'))
+        log.startLogging(open(cmd_cfg['log-file'], 'a'))
 
     cfg_file = cmd_cfg['config-file']
     if cfg_file is not None:
