@@ -199,7 +199,7 @@ def getConfigOption(cfg, section, option, default=None):
 
 
 def parseLogAll(value):
-    return value.split(' ')
+    return value.split(' ') if value else None
 
 
 def parseLogVO(value):
