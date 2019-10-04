@@ -17,6 +17,7 @@ import os
 import time
 import urlparse
 import ConfigParser
+from bart.config import DEFAULT_STDERR_LEVEL, STDERR_LEVEL
 
 try:
     from xml.etree import cElementTree as ET
@@ -563,6 +564,17 @@ def deleteOldUsageRecords(log_dir, ttl_seconds):
     return defer.succeed(None)
 
 
+def LogStderrObserver(msg, stderr_level):
+    if not stderr_level:
+        return
+
+    # Check whether to write the message to stderr.
+    #
+    # If we wanted to be fancy, we could also take msg['logLevel'] into
+    # account (if provided), but I'm too lazy
+    if(stderr_level in ('ERROR', 'CRITICAL') and msg['isError']) or stderr_level in ('DEBUG', 'INFO', 'WARNING'):
+        sys.stderr.write("%s\n" % msg['message'])
+
 
 def doMain():
     """
@@ -580,14 +592,14 @@ def doMain():
         return
 
     if cmd_cfg['stdout']:
-        log.startLogging(sys.stdout)
+        log.startLogging(sys.stdout, setStdout=False)
     else:
         try:
             fd = open(cmd_cfg['log-file'], 'a')
         except Exception, e:
             sys.stderr.write("Can't open log file '%s' for writing: %s\n" % (cmd_cfg['log-file'], e))
             raise
-        log.startLogging(fd)
+        log.startLogging(fd, setStdout=False)
 
     cfg_file = cmd_cfg['config-file']
     if cfg_file is not None:
@@ -602,6 +614,10 @@ def doMain():
     #log.msg('Using %s as config file' % cfg_file)
     # read config
     cfg = getConfig(cfg_file)
+
+    stderr_level = getConfigOption(cfg, CONFIG_SECTION_COMMON, STDERR_LEVEL, DEFAULT_STDERR_LEVEL)
+    if stderr_level:
+        log.addObserver(lambda msg: LogStderrObserver(msg, stderr_level))
 
     log_dir = getConfigOption(cfg, CONFIG_SECTION_COMMON, CONFIG_LOG_DIR, DEFAULT_LOG_DIR)
 
