@@ -582,7 +582,12 @@ def doMain():
     if cmd_cfg['stdout']:
         log.startLogging(sys.stdout)
     else:
-        log.startLogging(open(cmd_cfg['log-file'], 'a'))
+        try:
+            fd = open(cmd_cfg['log-file'], 'a')
+        except Exception, e:
+            sys.stderr.write("Can't open log file '%s' for writing: %s\n" % (cmd_cfg['log-file'], e))
+            raise
+        log.startLogging(fd)
 
     cfg_file = cmd_cfg['config-file']
     if cfg_file is not None:
