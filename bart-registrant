@@ -494,7 +494,7 @@ def _performURRegistration(regmap, urmap, logdir, ctxFactory, batch_size):
         if isinstance(result, failure.Failure):
             # something went wrong in the registration - stop future registrations
             # split into to 2 lines (far easier to read in the log)
-            log.err("Error registration records to %s" % used_service_endpoint)
+            log.err("Error registration records to %s (%s)" % (used_service_endpoint,result.getErrorMessage()))
             log.msg("Skipping all registrations to this endpoint for now")
             error_endpoints[used_service_endpoint] = True
 
