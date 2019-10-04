@@ -299,7 +299,17 @@ def httpRequest(url, method='GET', payload=None, ctxFactory=None):
     # copied from twisted.web.client in order to get access to the
     # factory (which contains response codes, headers, etc)
 
-    scheme, host, port, path = client._parse(url)
+    def parse_url(url):
+        urlp = urlparse.urlparse(url)
+        netlocparts = urlp.netloc.split(':')
+        host = netlocparts[0]
+        if len(netlocparts) > 1:
+            port = int(netlocparts[1])
+        else:
+            port = None
+        return urlp.scheme, host, port
+
+    scheme, host, port = parse_url(url)
     factory = client.HTTPClientFactory(url, method=method, postdata=payload)
     factory.noisy = False # stop spewing about factory start/stop
     # fix missing port in header (bug in twisted.web.client)
