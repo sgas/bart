@@ -21,7 +21,7 @@ except ImportError:
 
 # constant / defaults
 ISO_TIME_FORMAT    = "%Y-%m-%dT%H:%M:%S"
-XML_HEADER         = '''<?xml version="1.0" encoding="UTF-8" ?>''' + "\n"
+XML_HEADER         = b'''<?xml version="1.0" encoding="UTF-8" ?>''' + b"\n"
 
 # values for the logger name + version
 LOGGER_NAME_VALUE    = 'SGAS-BaRT'
@@ -174,9 +174,9 @@ class UsageRecord:
 
     def writeXML(self, filename):
         tree = self.generateTree()
-        f = file(filename, 'w')
-        f.write(XML_HEADER)
-        tree.write(f, encoding='utf-8')
+        with open(filename, 'wb') as f:
+            f.write(XML_HEADER)
+            tree.write(f, encoding='utf-8')
 
 
 # ----
