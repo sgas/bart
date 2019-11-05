@@ -45,7 +45,7 @@ CONFIG = {
             BILLING_UNIT:      { 'required': False },
           }
 
-COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist --state=%s --starttime="%s" --endtime="%s"'
+COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist,NNodes --state=%s --starttime="%s" --endtime="%s"'
 
 def exec_cmd(cmd):
     """
@@ -219,6 +219,7 @@ class Slurm:
         wall_time    = common.getSeconds(log_entry[7])
         core_count   = self.extractBillingUnit(log_entry[9])
         hosts        = self.getNodes(log_entry[10])
+        nnodes       = int(log_entry[11])
 
         # clean data and create various composite entries from the work load trace
         job_identifier = job_id
@@ -251,7 +252,7 @@ class Slurm:
         ur.machine_name     = hostname
         ur.queue            = queue
         ur.processors       = core_count
-        ur.node_count       = len(hosts)
+        ur.node_count       = nnodes
         ur.host             = ','.join(hosts)
         ur.submit_time      = usagerecord.epoch2isoTime(submit_time)
         ur.start_time       = usagerecord.epoch2isoTime(start_time)
