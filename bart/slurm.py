@@ -101,7 +101,7 @@ class SlurmBackend:
         if versioncmp(sacct_version, "17.11.0") < 0:
             command = COMMAND % ('ca,cd,f,nf,pr,rq', state_starttime, self.end_str)
         else:
-            command = COMMAND % ('ca,cd,f,nf,pr,rq,to', state_starttime, self.end_str)
+            command = COMMAND % ('ca,cd,f,nf,pr,rq,to,oom', state_starttime, self.end_str)
 
         self.results = exec_cmd(command)
         # remove description line
