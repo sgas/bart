@@ -9,7 +9,10 @@
 
 import re
 import os
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 import logging
 from optparse import OptionParser
 
@@ -99,25 +102,25 @@ class BartConfig:
             value = self.getConfigValue(section, key, None) 
             if value == None:
                 if item['required'] == True:
-                    print "Required Value '%s' is missing in section [%s]" % (key,section)
+                    print("Required Value '%s' is missing in section [%s]" % (key,section))
                     return False
             else:
                 # check if value is of correct type                
                 if 'type' in item and item['type'] in ['bool'] and value not in ['true','false','0','1','yes','no']:
-                    print "Item '%s' defined as 'bool' in section [%s] does not have a valid syntax" % (key,section)
+                    print("Item '%s' defined as 'bool' in section [%s] does not have a valid syntax" % (key,section))
                     return False
                 
                 if 'type' in item and item['type'] in ['int']:
                     try:
                             int(value)
                     except ValueError:                    
-                        print "Item '%s' defined as 'bool' in section [%s] does not have a valid syntax" % (key,section)
+                        print("Item '%s' defined as 'bool' in section [%s] does not have a valid syntax" % (key,section))
                         return False
                                     
         # Check for items not corresponding with the section
         for item in self.cfg.items(section):
             if item[0] not in lrms.CONFIG:
-                print "Value '%s' found but not defiend in section [%s]" % (item[0] + "=" + item[1], section)
+                print("Value '%s' found but not defiend in section [%s]" % (item[0] + "=" + item[1], section))
                 return False                 
                 
         return True

@@ -15,8 +15,17 @@ Copyright: Nordic Data Grid Facility (2009, 2010)
 import sys
 import os
 import time
-import urlparse
-import ConfigParser
+
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
+
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
+
 from bart.config import DEFAULT_STDERR_LEVEL, STDERR_LEVEL
 
 try:
@@ -29,7 +38,7 @@ from OpenSSL import SSL
 
 from twisted.internet import reactor, defer
 from twisted.python import log, usage, failure
-from twisted.web import client
+from twisted.web import client, http
 
 from bart.usagerecord import urelements as ur
 
@@ -176,7 +185,7 @@ class ContextFactory:
 
 def getConfig(filepath):
 
-    cfg_file = file(filepath)
+    cfg_file = open(filepath,"r")
 
     cfg = ConfigParser.SafeConfigParser()
     cfg.readfp(cfg_file)
@@ -292,7 +301,7 @@ def createFileEPMapping(epmap):
 
 
 
-def httpRequest(url, method='GET', payload=None, ctxFactory=None):
+def httpRequest(url, method=b'GET', payload=None, ctxFactory=None):
     # probably need a header options as well
     """
     Peform a http request.
@@ -300,29 +309,31 @@ def httpRequest(url, method='GET', payload=None, ctxFactory=None):
     # copied from twisted.web.client in order to get access to the
     # factory (which contains response codes, headers, etc)
 
-    def parse_url(url):
-        urlp = urlparse.urlparse(url)
-        netlocparts = urlp.netloc.split(':')
-        host = netlocparts[0]
-        if len(netlocparts) > 1:
-            port = int(netlocparts[1])
-        else:
-            port = None
-        return urlp.scheme, host, port
+    scheme, netloc, path, params, query, fragment = http.urlparse(url.encode(encoding='utf-8'))
+    if scheme == b'https':
+        defaultPort = 443
+    else:
+        defaultPort = 80
 
-    scheme, host, port = parse_url(url)
-    factory = client.HTTPClientFactory(url, method=method, postdata=payload)
+    host, port = netloc, defaultPort
+    if b':' in host:
+        host, port = host.split(b':')
+        try:
+            port = int(port)
+        except ValueError:
+            port = defaultPort
+    
+    factory = client.HTTPClientFactory(url.encode(encoding='utf-8'), method=method, postdata=payload)
     factory.noisy = False # stop spewing about factory start/stop
     # fix missing port in header (bug in twisted.web.client)
     if port:
-        factory.headers['host'] = host + ':' + str(port)
+        factory.headers[b'host'] = host.decode(encoding='utf-8') + ':' + str(port)
 
-    if scheme == 'https':
-        reactor.connectSSL(host, port, factory, ctxFactory)
+    if scheme == b'https':
+        reactor.connectSSL(host.decode(encoding='utf-8'), port, factory, ctxFactory)
     else:
-        reactor.connectTCP(host, port, factory)
+        reactor.connectTCP(host.decode(encoding='utf-8'), port, factory)
 
-    #factory.deferred.addBoth(f, factory)
     return factory.deferred, factory
 
 
@@ -335,7 +346,7 @@ def createEPRegistrationMapping(endpoints, ctxFactory):
             return location
         elif location.startswith('/'):
             # location is a path, and must be merged with base endpoint to form a suitable url
-            url = urlparse.urlparse(endpoint)
+            url = urlparse(endpoint)
             reg_url = url[0] + '://' + url[1] + location
             return reg_url
         else:
@@ -385,11 +396,11 @@ def insertUsageRecords(url, payload, ctxFactory):
     service.
     """
     def gotResponse(result, factory, url):
-        if factory.status != '200':
+        if factory.status != b'200':
             log.err("Reply from %s had other response code than 200 (%s)" % (url, factory.status))
         return result
 
-    d, f = httpRequest(url, method='POST', payload=payload, ctxFactory=ctxFactory)
+    d, f = httpRequest(url, method=b'POST', payload=payload, ctxFactory=ctxFactory)
     d.addCallback(gotResponse, f, url)
     return d
 
@@ -584,11 +595,11 @@ def doMain():
     cmd_cfg = CommandLineOptions()
     try:
         cmd_cfg.parseOptions()
-    except SystemExit, e:
+    except SystemExit as e:
         return # deal with silly sys.exit(0) in twisted.python.usage
-    except usage.UsageError, e:
-        print '%s: %s' % (sys.argv[0], str(e))
-        print '%s: Try --help for usage details.' % (sys.argv[0])
+    except usage.UsageError as e:
+        print('%s: %s' % (sys.argv[0], str(e)))
+        print('%s: Try --help for usage details.' % (sys.argv[0]))
         return
 
     if cmd_cfg['stdout']:
@@ -596,7 +607,7 @@ def doMain():
     else:
         try:
             fd = open(cmd_cfg['log-file'], 'a')
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("Can't open log file '%s' for writing: %s\n" % (cmd_cfg['log-file'], e))
             raise
         log.startLogging(fd, setStdout=False)

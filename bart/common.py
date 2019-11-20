@@ -50,7 +50,7 @@ def writeGeneratorState(lrms):
 
     dirpath = os.path.dirname(state_file)
     if not os.path.exists(dirpath):
-        os.makedirs(dirpath, mode=0750)
+        os.makedirs(dirpath, mode=0o750)
 
     f = open(state_file, 'w')
     f.write(lrms.createGeneratorState())

@@ -10,7 +10,6 @@
 import os
 import time
 import datetime
-import dateutil.parser
 import logging
 import subprocess
 import sys
@@ -61,7 +60,7 @@ def exec_cmd(cmd):
     else:
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
         data, _ = process.communicate()
-        return data.strip().split('\n')
+        return data.decode(encoding='utf-8').strip().split('\n')
 
 
 def versioncmp(a, b):
@@ -93,8 +92,8 @@ class SlurmBackend:
         # Check if number of days since last run is > max_days, if so only
         # advance max_days days
         max_days = int(max_days)     
-        if max_days > 0 and datetime.datetime.now() - dateutil.parser.parse(state_starttime) > datetime.timedelta(days=max_days):
-            self.end_str = dateutil.parser.parse(state_starttime) + datetime.timedelta(days=max_days)
+        if max_days > 0 and datetime.datetime.now() - datetime.datetime.strptime( state_starttime, "%Y-%m-%dT%H:%M:%S" ) > datetime.timedelta(days=max_days):
+            self.end_str = datetime.datetime.strptime( state_starttime, "%Y-%m-%dT%H:%M:%S" ) + datetime.timedelta(days=max_days)
             self.end_str = self.end_str.isoformat().split('.')[0]
 
         sacct_version = exec_cmd("sacct --version")[0].split(' ')[1]
@@ -157,10 +156,10 @@ class Slurm:
                     sequence = sequence.rstrip(']')
                     if '-' in  sequence:
                         numbers = sequence.split('-')
-			numlength = len(numbers[0])
+                        numlength = len(numbers[0])
 
                         for i in range(int(numbers[0]),int(numbers[1])+1):
-			    nodes.append(parts[0] + "{0:0>{width}}".format(i,width=numlength))
+                            nodes.append(parts[0] + "{0:0>{width}}".format(i,width=numlength))
                     else:
                         nodes.append(parts[0] + sequence)
             else:
