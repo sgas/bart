@@ -36,13 +36,9 @@ def main():
 
     # Log level
     if options.debug:
-        loglevel = "DEBUG"
+        loglevel = logging.DEBUG
     else:
-        loglevel = cfg.getConfigValue(config.SECTION_COMMON, config.LOGLEVEL, config.DEFAULT_LOG_LEVEL)
-        if loglevel not in config.VALID_LOGLEVELS:
-            sys.stderr.write("Unknown loglevel '%s' in config file %s\nValid log elevels are %s\n" %
-                             (loglevel, options.config, ', '.join(config.VALID_LOGLEVELS)))
-            sys.exit(1)
+        loglevel = cfg.getLoglevel()
 
     # open logfile
     logfile = options.logfile

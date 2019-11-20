@@ -39,7 +39,7 @@ STDERR_LEVEL = 'stderr_level'
 STATEDIR   = 'statedir'
 SUPPRESS_USERMAP_INFO = 'suppress_usermap_info'
 
-VALID_LOGLEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
+VALID_LOGLEVELS = {'DEBUG': logging.DEBUG, 'INFO': logging.INFO, 'WARNING': logging.WARNING, 'ERROR': logging.ERROR, 'CRITICAL': logging.CRITICAL}
 
 # regular expression for matching mapping lines
 rx = re.compile('''\s*(.*)\s*"(.*)"''')
@@ -54,6 +54,8 @@ def getParser():
 
 class BartConfig:
     def __init__(self,config_file):
+
+        self.config_file = config_file
 
         if not os.path.exists(config_file):
             raise IOError('Configuration file %s does not exist\n' % config_file)
@@ -92,6 +94,16 @@ class BartConfig:
             return False
 
         return False;
+
+
+    def getLoglevel(self):
+        s = self.getConfigValue(SECTION_COMMON, LOGLEVEL, DEFAULT_LOG_LEVEL)
+
+        if s not in VALID_LOGLEVELS:
+            raise ValueError("Unknown loglevel '%s' in config file %s\nValid log elevels are %s\n" %
+                             (s, self.config_file, ', '.join(VALID_LOGLEVELS)))
+        return VALID_LOGLEVELS[s] 
+        
        
     # Check for missing items and check syntax
     def validate(self,section,lrms):
