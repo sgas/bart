@@ -98,7 +98,7 @@ class SlurmBackend:
 
         sacct_version = exec_cmd("sacct --version")[0].split(' ')[1]
         if versioncmp(sacct_version, "17.11.0") < 0:
-            command = COMMAND % ('ca,cd,f,nf,pr,rq', state_starttime, self.end_str)
+            command = COMMAND % ('ca,cd,f,nf,pr,rq,to', state_starttime, self.end_str)
         else:
             command = COMMAND % ('ca,cd,f,nf,pr,rq,to,oom', state_starttime, self.end_str)
 
