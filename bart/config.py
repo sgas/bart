@@ -19,27 +19,42 @@ from optparse import OptionParser
 DEFAULT_CONFIG_FILE     = '/etc/bart/bart.conf'
 DEFAULT_USERMAP_FILE    = '/etc/bart/usermap'
 DEFAULT_VOMAP_FILE      = '/etc/bart/vomap'
-DEFAULT_LOG_FILE        = '/var/log/bart-logger.log'
+DEFAULT_LOGGER_LOG_FILE = '/var/log/bart-logger.log'
+DEFAULT_REGISTRANT_LOG_FILENAME = '/var/log/bart-registration.log'
 DEFAULT_LOG_DIR         = '/var/spool/bart/usagerecords'
 DEFAULT_STATEDIR        = '/var/spool/bart'
 DEFAULT_SUPPRESS_USERMAP_INFO = 'false'
 DEFAULT_LOG_LEVEL       = 'INFO'
 DEFAULT_STDERR_LEVEL    = None
+DEFAULT_HOSTKEY      = '/etc/grid-security/hostkey.pem'
+DEFAULT_HOSTCERT     = '/etc/grid-security/hostcert.pem'
+DEFAULT_CERTDIR      = '/etc/grid-security/certificates'
+DEFAULT_BATCH_SIZE   = 100
+DEFAULT_UR_LIFETIME  = 30 # days
 
-# Common section
+
 SECTION_COMMON = 'common'
+SECTION_LOGGER  = 'logger'
 
-HOSTNAME   = 'hostname'
-USERMAP    = 'usermap'
-VOMAP      = 'vomap'
-LOGDIR     = 'logdir'
-LOGFILE    = 'logfile'
-LOGLEVEL   = 'loglevel'
+HOSTNAME     = 'hostname'
+USERMAP      = 'usermap'
+VOMAP        = 'vomap'
+LOGDIR       = 'logdir'
+LOGFILE      = 'logfile'   # Logfile for bart-logger
+LOGLEVEL     = 'loglevel'
 STDERR_LEVEL = 'stderr_level'
-STATEDIR   = 'statedir'
+STATEDIR     = 'statedir'
+HOSTKEY      = 'x509_user_key'
+HOSTCERT     = 'x509_user_cert'
+CERTDIR      = 'x509_cert_dir'
+LOG_ALL      = 'log_all'
+LOG_VO       = 'log_vo'
+UR_LIFETIME  = 'ur_lifetime'
 SUPPRESS_USERMAP_INFO = 'suppress_usermap_info'
 
 VALID_LOGLEVELS = {'DEBUG': logging.DEBUG, 'INFO': logging.INFO, 'WARNING': logging.WARNING, 'ERROR': logging.ERROR, 'CRITICAL': logging.CRITICAL}
+
+LOG_FORMAT = "%(asctime)s [%(levelname)s] %(message)s"
 
 # regular expression for matching mapping lines
 rx = re.compile('''\s*(.*)\s*"(.*)"''')
@@ -66,8 +81,11 @@ class BartConfig:
             raise IOError("Reading config file %s failed, for some reason" % config_file)
 
     def getConfigValue(self, section, value, default=None):
+        clean = lambda s : type(s) == str and s.strip().replace('"','').replace("'",'') or s
+
         try:
-            return self.cfg.get(section, value)
+            value = self.cfg.get(section, value)
+            return clean(value)
         except ConfigParser.NoSectionError:
             return default
         except ConfigParser.NoOptionError:

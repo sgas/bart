@@ -19,8 +19,6 @@ from bart import config, common
 from bart.config import BartConfig
 from bart.config import BartMapFile
 
-LOG_FORMAT = "%(asctime)s [%(levelname)s] %(message)s"
-
 def main():
     # start with command line parsing and various setups
     parser = config.getParser()
@@ -43,9 +41,9 @@ def main():
     # open logfile
     logfile = options.logfile
     if logfile is None:
-        logfile = cfg.getConfigValue(config.SECTION_COMMON, config.LOGFILE, config.DEFAULT_LOG_FILE)
+        logfile = cfg.getConfigValue(config.SECTION_COMMON, config.LOGFILE, config.DEFAULT_LOGGER_LOG_FILE)
 
-    logging.basicConfig(filename=logfile, format=LOG_FORMAT, level=loglevel)
+    logging.basicConfig(filename=logfile, format=config.LOG_FORMAT, level=loglevel)
 
     stderr_level =  cfg.getConfigValue(config.SECTION_COMMON, config.STDERR_LEVEL, config.DEFAULT_STDERR_LEVEL)
     if stderr_level:

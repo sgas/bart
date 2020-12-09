@@ -8,8 +8,10 @@ This file is a bit messy, as it contains many things that would normally be
 in seperate modules, but is contained in this single file in order to make
 deployment easy (no imports, problems setting up PYTHONPATH, etc).
 
-Author: Henrik Thostrup Jensen <htj@ndgf.org>
-Copyright: Nordic Data Grid Facility (2009, 2010)
+Authors: Henrik Thostrup Jensen <htj@ndgf.org>,
+         Erik Edelmann <edelmann@csc.fi>
+Copyright: Nordic Data Grid Facility (2009, 2010),
+           Nordic e-Infrastructure Collaboration (2020)
 """
 
 import sys
@@ -26,7 +28,8 @@ try:
 except ImportError:
     import configparser as ConfigParser
 
-from bart.config import DEFAULT_STDERR_LEVEL, STDERR_LEVEL
+from bart import config
+from bart.config import BartConfig
 
 try:
     from xml.etree import cElementTree as ET
@@ -35,9 +38,10 @@ except ImportError:
     from elementtree import ElementTree as ET
 
 from OpenSSL import SSL
+import logging
 
 from twisted.internet import reactor, defer
-from twisted.python import log, usage, failure
+from twisted.python import usage, failure
 from twisted.web import client, http
 
 from bart.usagerecord import urelements as ur
@@ -46,34 +50,6 @@ from bart.usagerecord import verify
 
 # Nasty global so we can do proper exit codes
 ERROR = False
-
-
-# static file locations
-DEFAULT_LOG_FILENAME           = '/var/log/bart-registration.log'
-
-# config sections
-CONFIG_SECTION_COMMON  = 'common'
-CONFIG_SECTION_LOGGER  = 'logger'
-CONFIG_HOSTKEY         = 'x509_user_key'
-CONFIG_HOSTCERT        = 'x509_user_cert'
-CONFIG_CERTDIR         = 'x509_cert_dir'
-CONFIG_LOG_DIR         = 'logdir'
-CONFIG_LOG_ALL         = 'log_all'
-CONFIG_LOG_VO          = 'log_vo'
-CONFIG_UR_LIFETIME     = 'ur_lifetime'
-
-# system defaults
-DEFAULT_CONFIG_FILE    = '/etc/bart/bart.conf'
-
-# configuration defaults
-DEFAULT_HOSTKEY      = '/etc/grid-security/hostkey.pem'
-DEFAULT_HOSTCERT     = '/etc/grid-security/hostcert.pem'
-DEFAULT_CERTDIR      = '/etc/grid-security/certificates'
-DEFAULT_LOG_DIR      = '/var/spool/bart/usagerecords/'
-DEFAULT_BATCH_SIZE   = 100
-DEFAULT_UR_LIFETIME  = 30 # days
-
-
 
 # subdirectories in the spool directory
 
@@ -88,8 +64,8 @@ class CommandLineOptions(usage.Options):
 
     optFlags = [ ['stdout', 's', 'Log to stdout'] ]
     optParameters = [
-        ['config-file', 'c', None, 'Config file to use (typically /etc/bart/bart.conf)'],
-        ['log-file', 'l', DEFAULT_LOG_FILENAME, 'Log file' ]
+        ['config-file', 'c', config.DEFAULT_CONFIG_FILE, 'Config file to use (typically /etc/bart/bart.conf)'],
+        ['log-file', 'l', config.DEFAULT_REGISTRANT_LOG_FILENAME, 'Log file' ]
     ]
 
 class StateFile:
@@ -182,17 +158,6 @@ class ContextFactory:
         return ctx
 
 
-
-def getConfig(filepath):
-
-    cfg_file = open(filepath,"r")
-
-    cfg = ConfigParser.SafeConfigParser()
-    cfg.readfp(cfg_file)
-    return cfg
-
-
-
 def getConfigOption(cfg, section, option, default=None):
 
     clean = lambda s : type(s) == str and s.strip().replace('"','').replace("'",'') or s
@@ -257,7 +222,7 @@ def createRegistrationPointsMapping(logdir, logpoints_all, logpoints_vo):
     Create a mapping from all the usage records filenames to which endpoints they
     should be registered.
     """
-    log.msg("Creating registration mapping (may take a little time)")
+    logging.info("Creating registration mapping (may take a little time)")
     mapping = {}
 
     ur_dir = os.path.join(logdir, UR_DIRECTORY)
@@ -270,11 +235,11 @@ def createRegistrationPointsMapping(logdir, logpoints_all, logpoints_vo):
         try:
             ure = ET.parse(filepath)
         except Exception:
-            log.msg('Error parsing file %(filepath)s, continuing' % {'filepath' : filepath})
+            logging.error('Error parsing file %(filepath)s, continuing' % {'filepath' : filepath})
             continue
         
         if verify.verify(ure.getroot()) is False:
-            log.msg('Error verifing file %(filepath)s, continuing' % {'filepath' : filepath})
+            logging.error('Error verifing file %(filepath)s, continuing' % {'filepath' : filepath})
             continue
 
         vos = getVONamesFromUsageRecord(ure)
@@ -309,7 +274,8 @@ def httpRequest(url, method=b'GET', payload=None, ctxFactory=None):
     # copied from twisted.web.client in order to get access to the
     # factory (which contains response codes, headers, etc)
 
-    scheme, netloc, path, params, query, fragment = http.urlparse(url.encode(encoding='utf-8'))
+    scheme, netloc, path, params, query, fragment = urlparse(url.encode(encoding='utf-8'))
+
     if scheme == b'https':
         defaultPort = 443
     else:
@@ -373,9 +339,9 @@ def createEPRegistrationMapping(endpoints, ctxFactory):
             if success and result is not None:
                 regmap[ep] = result
             elif success:
-                log.err('Endpoint %s does not appear to have a registration service.' % ep)
+                logging.error('Endpoint %s does not appear to have a registration service.' % ep)
             else:
-                log.err('Error contacting service %s (%s)' % (ep, result.getErrorMessage()))
+                logging.error('Error contacting service %s (%s)' % (ep, result.getErrorMessage()))
         return regmap
 
     defs = []
@@ -397,7 +363,7 @@ def insertUsageRecords(url, payload, ctxFactory):
     """
     def gotResponse(result, factory, url):
         if factory.status != b'200':
-            log.err("Reply from %s had other response code than 200 (%s)" % (url, factory.status))
+            logging.error("Reply from %s had other response code than 200 (%s)" % (url, factory.status))
         return result
 
     d, f = httpRequest(url, method=b'POST', payload=payload, ctxFactory=ctxFactory)
@@ -413,7 +379,7 @@ def joinUsageRecordFiles(logdir, filenames):
     for fn in filenames:
         filepath = os.path.join(logdir, UR_DIRECTORY, fn)
         if os.path.getsize(filepath) == 0:
-            log.msg("Skipping file %s for transmit as it is empty" % fn)
+            logging.info("Skipping file %s for transmit as it is empty" % fn)
             continue
         ure = ET.parse(filepath)
         urs.append(ure.getroot())
@@ -425,12 +391,12 @@ def joinUsageRecordFiles(logdir, filenames):
 def registerBatch(ep, url, logdir, filenames, ctxFactory):
 
     def insertDone(result):
-        log.msg("%i records registered to %s" % (len(filenames), ep))
+        logging.info("%i records registered to %s" % (len(filenames), ep))
         for fn in filenames:
             StateFile(logdir, fn).add(ep).write()
 
     def insertError(error):
-        log.err("Error during batch insertion: %s" % error.getErrorMessage())
+        logging.error("Error during batch insertion: %s" % error.getErrorMessage())
         return error
 
     ur_data = joinUsageRecordFiles(logdir, filenames)
@@ -441,18 +407,18 @@ def registerBatch(ep, url, logdir, filenames, ctxFactory):
 
 
 
-def registerUsageRecords(mapping, logdir, ctxFactory, batch_size=DEFAULT_BATCH_SIZE):
+def registerUsageRecords(mapping, logdir, ctxFactory, batch_size=config.DEFAULT_BATCH_SIZE):
     """
     Register usage records, given a mapping of where to
     register the usage records.
     """
     urmap = createFileEPMapping(mapping)
     if not urmap: # no registration to perform
-        log.msg("No registrations to perform")
+        logging.info("No registrations to perform")
         return defer.succeed(None)
 
-    log.msg("Registrations to perform: %i files" % len(urmap))
-    log.msg("Retrieving registration hrefs (service endpoints)")
+    logging.info("Registrations to perform: %i files" % len(urmap))
+    logging.info("Retrieving registration hrefs (service endpoints)")
     d = createEPRegistrationMapping(mapping.keys(), ctxFactory)
 
     d.addCallback(_performURRegistration, urmap, logdir, ctxFactory, batch_size)
@@ -465,15 +431,15 @@ def registerUsageRecords(mapping, logdir, ctxFactory, batch_size=DEFAULT_BATCH_S
 def _performURRegistration(regmap, urmap, logdir, ctxFactory, batch_size):
 
     if not regmap:
-        log.err("Failed to get any service refs, not doing any registrations")
+        logging.error("Failed to get any service refs, not doing any registrations")
         return defer.fail(Exception("Failed to get any service refs, not doing any registrations"))
 
     batch_sets = {}
     for ep, urreg in regmap.items():
-        log.msg("%s -> %s" % (ep, urreg))
+        logging.info("%s -> %s" % (ep, urreg))
         batch_sets[ep] = []
 
-    log.msg("Starting registration")
+    logging.info("Starting registration")
 
     skipped_registrations = {}
 
@@ -491,7 +457,7 @@ def _performURRegistration(regmap, urmap, logdir, ctxFactory, batch_size):
                 pass # deferring registration as service is not available
 
     for ep, ur_registered in skipped_registrations.items():
-        log.msg("Skipping %i registrations to %s, records already registered" % (ur_registered, ep))
+        logging.info("Skipping %i registrations to %s, records already registered" % (ur_registered, ep))
 
     # build up registraion batches (list of (ep, filenames) tuples)
     registrations = []
@@ -506,8 +472,8 @@ def _performURRegistration(regmap, urmap, logdir, ctxFactory, batch_size):
         if isinstance(result, failure.Failure):
             # something went wrong in the registration - stop future registrations
             # split into to 2 lines (far easier to read in the log)
-            log.err("Error registration records to %s (%s)" % (used_service_endpoint,result.getErrorMessage()))
-            log.msg("Skipping all registrations to this endpoint for now")
+            logging.error("Error registration records to %s (%s)" % (used_service_endpoint,result.getErrorMessage()))
+            logging.info("Skipping all registrations to this endpoint for now")
             error_endpoints[used_service_endpoint] = True
 
         try:
@@ -528,7 +494,7 @@ def _performURRegistration(regmap, urmap, logdir, ctxFactory, batch_size):
 
 def archiveUsageRecords(logdir, urmap):
 
-    log.msg("Registration done, commencing archiving process")
+    logging.info("Registration done, commencing archiving process")
     archive_dir = os.path.join(logdir, ARCHIVE_DIRECTORY)
     if not os.path.exists(archive_dir):
         os.makedirs(archive_dir)
@@ -545,14 +511,14 @@ def archiveUsageRecords(logdir, urmap):
             os.unlink(statefilepath)
             os.rename(urfilepath, archivefilepath)
 
-    log.msg("Archiving done")
+    logging.info("Archiving done")
 
 
 
 def deleteOldUsageRecords(log_dir, ttl_seconds):
 
     archive_dir = os.path.join(log_dir, ARCHIVE_DIRECTORY)
-    log.msg("Cleaning up old records.")
+    logging.info("Cleaning up old records.")
 
     now = time.time()
 
@@ -571,7 +537,7 @@ def deleteOldUsageRecords(log_dir, ttl_seconds):
             os.unlink(filepath)
             i += 1
 
-    log.msg("Records deleted: %i" % i)
+    logging.info("Records deleted: %i" % i)
     return defer.succeed(None)
 
 
@@ -602,61 +568,55 @@ def doMain():
         print('%s: Try --help for usage details.' % (sys.argv[0]))
         return
 
-    if cmd_cfg['stdout']:
-        log.startLogging(sys.stdout, setStdout=False)
-    else:
-        try:
-            fd = open(cmd_cfg['log-file'], 'a')
-        except Exception as e:
-            sys.stderr.write("Can't open log file '%s' for writing: %s\n" % (cmd_cfg['log-file'], e))
-            raise
-        log.startLogging(fd, setStdout=False)
-
     cfg_file = cmd_cfg['config-file']
-    if cfg_file is not None:
-        if (not os.path.exists(cfg_file)) or (not os.path.isfile(cfg_file)):
-            serr = 'The path %s does not exist or is not a file' % cfg_file
-            log.err(serr)
-            return
+    try:
+        cfg = BartConfig(cfg_file)
+    except Exception as e:
+        sys.stderr.write("Can't read config file: %s\n" % e)
+        sys.exit(1)
+
+    # Log level
+    #if options.debug:
+    #    loglevel = logging.DEBUG
+    #else:
+    loglevel = cfg.getLoglevel()
+
+    if cmd_cfg['stdout']:
+        logging.basicConfig(stream=sys.stdout, format=config.LOG_FORMAT, level=loglevel)
     else:
-        cfg_file = DEFAULT_CONFIG_FILE
+        logging.basicConfig(filename=cmd_cfg['log-file'], format=config.LOG_FORMAT, level=loglevel)
 
-
-    #log.msg('Using %s as config file' % cfg_file)
-    # read config
-    cfg = getConfig(cfg_file)
-
-    stderr_level = getConfigOption(cfg, CONFIG_SECTION_COMMON, STDERR_LEVEL, DEFAULT_STDERR_LEVEL)
+    stderr_level = cfg.getConfigValue(config.SECTION_COMMON, config.STDERR_LEVEL, config.DEFAULT_STDERR_LEVEL)
     if stderr_level:
-        log.addObserver(lambda msg: LogStderrObserver(msg, stderr_level))
+        stderr_handler = logging.StreamHandler()
+        stderr_handler.setLevel(stderr_level)
+        logging.getLogger().addHandler(stderr_handler)
 
-    log_dir = getConfigOption(cfg, CONFIG_SECTION_COMMON, CONFIG_LOG_DIR, DEFAULT_LOG_DIR)
 
-    las = getConfigOption(cfg, CONFIG_SECTION_LOGGER, CONFIG_LOG_ALL)
-    lvo = getConfigOption(cfg, CONFIG_SECTION_LOGGER, CONFIG_LOG_VO)
-    ult = getConfigOption(cfg, CONFIG_SECTION_LOGGER, CONFIG_UR_LIFETIME, DEFAULT_UR_LIFETIME)
+    log_dir = cfg.getConfigValue(config.SECTION_COMMON, config.LOGDIR, config.DEFAULT_LOG_DIR)
+
+    las = cfg.getConfigValue(config.SECTION_LOGGER, config.LOG_ALL)
+    lvo = cfg.getConfigValue(config.SECTION_LOGGER, config.LOG_VO)
+    ult = cfg.getConfigValue(config.SECTION_LOGGER, config.UR_LIFETIME, config.DEFAULT_UR_LIFETIME)
     log_all = parseLogAll(las)
     log_vo  = parseLogVO(lvo)
     ur_lifetime = parseURLifeTime(ult)
 
-    host_key  = getConfigOption(cfg, CONFIG_SECTION_COMMON, CONFIG_HOSTKEY, DEFAULT_HOSTKEY)
-    host_cert = getConfigOption(cfg, CONFIG_SECTION_COMMON, CONFIG_HOSTCERT, DEFAULT_HOSTCERT)
-    cert_dir  = getConfigOption(cfg, CONFIG_SECTION_COMMON, CONFIG_CERTDIR, DEFAULT_CERTDIR)
+    host_key  = cfg.getConfigValue(config.SECTION_COMMON, config.HOSTKEY, config.DEFAULT_HOSTKEY)
+    host_cert = cfg.getConfigValue(config.SECTION_COMMON, config.HOSTCERT, config.DEFAULT_HOSTCERT)
+    cert_dir  = cfg.getConfigValue(config.SECTION_COMMON, config.CERTDIR, config.DEFAULT_CERTDIR)
 
-    log.msg('Configuration:')
-    log.msg(' Log dir: %s' % log_dir)
-    log.msg(' Log all: %s' % log_all)
-    log.msg(' Log vo : %s' % log_vo)
-    #log.msg(' Host key  : %s' % host_key)
-    #log.msg(' Host cert : %s' % host_cert)
-    #log.msg(' Cert dir  : %s' % cert_dir)
+    logging.info('Configuration:')
+    logging.info(' Log dir: %s' % log_dir)
+    logging.info(' Log all: %s' % log_all)
+    logging.info(' Log vo : %s' % log_vo)
 
     if not (log_all or log_vo):
-        log.err('No log points given. Cowardly refusing to do anything')
+        logging.error('No log points given. Cowardly refusing to do anything')
         return
 
     if not os.path.exists(log_dir):
-        log.err('Log directory %s does not exist, bailing out.' % log_dir)
+        logging.error('Log directory %s does not exist, bailing out.' % log_dir)
         return
 
     mapping = createRegistrationPointsMapping(log_dir, log_all, log_vo)
@@ -675,7 +635,7 @@ def main():
         global ERROR
         ERROR = True
         if error.type == SystemExit:
-            log.err('SystemExit: %s' % error.value)
+            logging.error('SystemExit: %s' % error.value)
         else:
             error.printTraceback()
 
