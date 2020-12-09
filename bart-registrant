@@ -41,7 +41,7 @@ from OpenSSL import SSL
 import logging
 
 from twisted.internet import reactor, defer
-from twisted.python import usage, failure
+from twisted.python import failure
 from twisted.web import client, http
 
 from bart.usagerecord import urelements as ur
@@ -59,14 +59,6 @@ ARCHIVE_DIRECTORY = 'archive'
 
 # -- code
 
-
-class CommandLineOptions(usage.Options):
-
-    optFlags = [ ['stdout', 's', 'Log to stdout'] ]
-    optParameters = [
-        ['config-file', 'c', config.DEFAULT_CONFIG_FILE, 'Config file to use (typically /etc/bart/bart.conf)'],
-        ['log-file', 'l', config.DEFAULT_REGISTRANT_LOG_FILENAME, 'Log file' ]
-    ]
 
 class StateFile:
     """
@@ -558,40 +550,18 @@ def doMain():
     "Real" main, parse command line, setup logging, start the actual logic, etc.
     """
     # start by parsing the command line to see if we have a specific config file
-    cmd_cfg = CommandLineOptions()
-    try:
-        cmd_cfg.parseOptions()
-    except SystemExit as e:
-        return # deal with silly sys.exit(0) in twisted.python.usage
-    except usage.UsageError as e:
-        print('%s: %s' % (sys.argv[0], str(e)))
-        print('%s: Try --help for usage details.' % (sys.argv[0]))
-        return
+    parser = config.getParser()
+    options, args = parser.parse_args()
 
-    cfg_file = cmd_cfg['config-file']
+    # read config file
+    cfg = None
     try:
-        cfg = BartConfig(cfg_file)
+        cfg = BartConfig(options.config)
     except Exception as e:
         sys.stderr.write("Can't read config file: %s\n" % e)
         sys.exit(1)
 
-    # Log level
-    #if options.debug:
-    #    loglevel = logging.DEBUG
-    #else:
-    loglevel = cfg.getLoglevel()
-
-    if cmd_cfg['stdout']:
-        logging.basicConfig(stream=sys.stdout, format=config.LOG_FORMAT, level=loglevel)
-    else:
-        logging.basicConfig(filename=cmd_cfg['log-file'], format=config.LOG_FORMAT, level=loglevel)
-
-    stderr_level = cfg.getConfigValue(config.SECTION_COMMON, config.STDERR_LEVEL, config.DEFAULT_STDERR_LEVEL)
-    if stderr_level:
-        stderr_handler = logging.StreamHandler()
-        stderr_handler.setLevel(stderr_level)
-        logging.getLogger().addHandler(stderr_handler)
-
+    config.setup_logfile(options, cfg)
 
     log_dir = cfg.getConfigValue(config.SECTION_COMMON, config.LOGDIR, config.DEFAULT_LOG_DIR)
 

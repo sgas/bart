@@ -9,6 +9,7 @@
 
 import re
 import os
+import sys
 try:
     import ConfigParser
 except ImportError:
@@ -63,9 +64,36 @@ def getParser():
     parser = OptionParser()
     parser.add_option('-l', '--log-file', dest='logfile', help='Log file (overwrites config option).')
     parser.add_option('-d', '--debug', action="store_true", default=False, help='Set log level to DEBUG')
-    parser.add_option('-c', '--config', dest='config', help='Configuration file.',
+    parser.add_option('-c', '--config', '--config-file', dest='config', help='Configuration file.',
                       default=DEFAULT_CONFIG_FILE, metavar='FILE')
+    parser.add_option('-s', '--stdout', action="store_true", default=False, help='Log to stdout')
     return parser
+
+
+def setup_logfile(options, cfg):
+
+    # Log level
+    if options.debug:
+        loglevel = logging.DEBUG
+    else:
+        loglevel = cfg.getLoglevel()
+
+    # open logfile
+    if options.stdout:
+        logging.basicConfig(stream=sys.stdout, format=LOG_FORMAT, level=loglevel)
+    else:
+        logfile = options.logfile
+        if logfile is None:
+            logfile = cfg.getConfigValue(SECTION_COMMON, LOGFILE, DEFAULT_LOGGER_LOG_FILE)
+        logging.basicConfig(filename=logfile, format=LOG_FORMAT, level=loglevel)
+
+    # Stderr level
+    stderr_level = cfg.getConfigValue(SECTION_COMMON, STDERR_LEVEL, DEFAULT_STDERR_LEVEL)
+    if stderr_level:
+        stderr_handler = logging.StreamHandler()
+        stderr_handler.setLevel(stderr_level)
+        logging.getLogger().addHandler(stderr_handler)
+    
 
 class BartConfig:
     def __init__(self,config_file):
