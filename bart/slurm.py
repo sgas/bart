@@ -44,7 +44,7 @@ CONFIG = {
             BILLING_UNIT:      { 'required': False },
           }
 
-COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobID,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist,NNodes --state=%s --starttime="%s" --endtime="%s"'
+COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobIDRaw,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist,NNodes --state=%s --starttime="%s" --endtime="%s"'
 
 def exec_cmd(cmd):
     """
