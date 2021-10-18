@@ -33,15 +33,28 @@ DEFAULT_IDTIMESTAMP = 'true'
 MAX_DAYS = 'max_days'
 MAX_DAYS_DEFAULT = 7
 
-BILLING_UNIT         = 'billing_unit'
-DEFAULT_BILLING_UNIT = 'cpu'
+# This fills in the "processors" field.
+PROCESSORS_UNIT         = 'processors_unit'
+DEFAULT_PROCESSORS_UNIT = 'cpu'  # GPU-clusters should likely use "gres/gpu"
+
+# If specified, this is multiplied with the duration and reported on the charge field.
+# If Slurm TRESWeights are used, one typically want to use the "billing" field here.
+CHARGE_UNIT          = 'charge_unit'
+DEFAULT_CHARGE_UNIT  = None
+
+# Slurm only allows for integer values in "billing", thus you may have needed to scale it up tresweights.
+# The reported charge value will be multiplied by this scale.
+CHARGE_SCALE         = 'charge_scale'
+DEFAULT_CHARGE_SCALE = 1.
 
 CONFIG = {
             STATEFILE:         { 'required': False },
             STATEFILE_DEFAULT: { 'required': False, type: 'int' },
             IDTIMESTAMP:       { 'required': False, type: 'bool' },
             MAX_DAYS:          { 'required': False, type: 'int' },
-            BILLING_UNIT:      { 'required': False },
+            PROCESSORS_UNIT:   { 'required': False },
+            CHARGE_UNIT:       { 'required': False },
+            CHARGE_SCALE:      { 'required': False, type: 'float' },
           }
 
 COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobIDRaw,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist,NNodes --state=%s --starttime="%s" --endtime="%s"'
@@ -131,7 +144,9 @@ class Slurm:
     def __init__(self,cfg):
         self.cfg = cfg
         self.idtimestamp = cfg.getConfigValueBool(SECTION, IDTIMESTAMP, DEFAULT_IDTIMESTAMP)
-        self.billing_unit = cfg.getConfigValue(SECTION, BILLING_UNIT, DEFAULT_BILLING_UNIT)
+        self.processors_unit = cfg.getConfigValue(SECTION, PROCESSORS_UNIT, DEFAULT_PROCESSORS_UNIT)
+        self.charge_unit = cfg.getConfigValue(SECTION, CHARGE_UNIT, DEFAULT_CHARGE_UNIT)
+        self.charge_scale = cfg.getConfigValue(SECTION, CHARGE_SCALE, DEFAULT_CHARGE_SCALE)
 
     def getStateFile(self):
         return self.cfg.getConfigValue(SECTION, STATEFILE, DEFAULT_STATEFILE)
@@ -173,24 +188,16 @@ class Slurm:
 
         return nodes
 
-    def extractBillingUnit(self, tres):
+    def getProcessors(self, tresdict):
         """
-        Extracts the configured billing unit from a TRES field.
+        Gets the configured "processors" unit from a TRES field.
         """
-
-        if tres == '':
-            return 0
-
-        # Transforms a string 'billing=5,cpu=2,mem=24G,node=1' into a dict
-        # { 'billing': 5, 'cpu': 2, 'mem': '24G', 'node': 1 }
-        tresdict = dict((k.strip(), v.strip()) for k, v in
-                        (item.split('=') for item in tres.split(',')))
 
         ## Extract the configured unit
-        value = tresdict.get(self.billing_unit,0)
+        value = tresdict.get(self.processors_unit, 0)
 
         ## Convert memory to MiB, if needed
-        if self.billing_unit == 'mem':
+        if self.processors_unit == 'mem':
             if value.endswith('M'):
                 value = int(value[:-1])
             elif value.endswith('G'):
@@ -204,6 +211,16 @@ class Slurm:
 
         return value
 
+    def getCharge(self, tresdict, wall_time):
+        """
+        Computes the "charge" unit from a TRES field.
+        """
+        if self.charge_unit is None:
+            return None
+
+        value = float(tresdict.get(self.charge_unit, 0))
+        return int(value * float(self.charge_scale) * float(wall_time))
+
     def createUsageRecord(self, log_entry, hostname, user_map, project_map):
         """
         Creates a Usage Record object given a slurm log entry.
@@ -211,6 +228,13 @@ class Slurm:
         
         if log_entry[1] == '' or log_entry[2] == '':
             return None
+
+        # Transforms a string 'billing=5,cpu=2,mem=24G,node=1' into a dict
+        # { 'billing': 5, 'cpu': 2, 'mem': '24G', 'node': 1 }
+        tres = log_entry[9]
+        tresdict = dict((k.strip(), v.strip()) for k, v in
+                        (item.split('=') for item in tres.split(','))) if tres else dict()
+
 
         # extract data from the workload trace (log_entry)
         job_id       = str(log_entry[0])
@@ -222,7 +246,8 @@ class Slurm:
         account_name = log_entry[6]
         utilized_cpu = common.getSeconds(log_entry[8])
         wall_time    = common.getSeconds(log_entry[7])
-        core_count   = self.extractBillingUnit(log_entry[9])
+        processors   = self.getProcessors(tresdict)
+        charge       = self.getCharge(tresdict, wall_time)
         hosts        = self.getNodes(log_entry[10])
         nnodes       = int(log_entry[11])
 
@@ -256,7 +281,7 @@ class Slurm:
         ur.global_user_name = user_map.get(user_name)
         ur.machine_name     = hostname
         ur.queue            = queue
-        ur.processors       = core_count
+        ur.processors       = processors
         ur.node_count       = nnodes
         ur.host             = ','.join(hosts)
         ur.submit_time      = usagerecord.epoch2isoTime(submit_time)
@@ -266,6 +291,10 @@ class Slurm:
         ur.wall_duration    = wall_time
         ur.project_name     = account_name
         ur.vo_info         += vo_info
+
+        # Optional field:
+        if charge is not None:
+            ur.charge = charge
 
         return ur
 
