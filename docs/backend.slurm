@@ -23,8 +23,14 @@ reuses the jobid.
 max_days: default=7
 Max number of days to process for every run of bart.
 
-billing_unit: default=cpu
-Which element of the AllocTRES should be used as the "number of cpus" in the
-reported job records.  If one sets up TRESBillingWeights in Slurm, using
-'billing_unit=billing' makes SGAS-BART report the same job "size" as Slurm
-uses for accounting.
+processors_unit: default=cpu
+Which element of the AllocTRES should be used as the PROCESSORS ("number of
+cpus") in the reported job records.
+
+charge_unit: default=None
+If specified, this is multiplied with the duration and reported on the CHARGE field.
+If Slurm TRESWeights are used, one typically want to use the "billing" field here.
+
+charge_scale: default=1.0
+Slurm only allows for integer values in "billing", thus you may have needed to scale it up tresweights.
+The reported charge value will be multiplied by this scale.
