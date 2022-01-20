@@ -17,7 +17,6 @@ import re
 
 from bart import config, common
 from bart.usagerecord import usagerecord
-from pwd import getpwuid
 
 SECTION = 'slurm'
 
@@ -57,7 +56,7 @@ CONFIG = {
             CHARGE_SCALE:      { 'required': False, type: 'float' },
           }
 
-COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobIDRaw,UID,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist,NNodes --state=%s --starttime="%s" --endtime="%s"'
+COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobIDRaw,User,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist,NNodes --state=%s --starttime="%s" --endtime="%s"'
 
 def exec_cmd(cmd):
     """
@@ -238,7 +237,7 @@ class Slurm:
 
         # extract data from the workload trace (log_entry)
         job_id       = str(log_entry[0])
-        user_name    = getpwuid(int(log_entry[1]))[0]
+        user_name    = log_entry[1]
         queue        = log_entry[2]
         submit_time  = time.mktime(common.datetimeFromIsoStr(log_entry[3]).timetuple())
         start_time   = time.mktime(common.datetimeFromIsoStr(log_entry[4]).timetuple())
