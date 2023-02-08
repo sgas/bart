@@ -228,6 +228,13 @@ class Slurm:
         if log_entry[1] == '' or log_entry[2] == '':
             return None
 
+        # Slurm 22 seems to handle cancelled jobs that never get
+        # started differently than Slurm 20 - the start time is logged
+        # as "None" rather than the time the job was cancelled.
+        if log_entry[4] in ('None', 'Unknown'):
+            logging.info('Skipping creation of UsageRecord for %s as Start=None' % log_entry[0])
+            return None
+
         # Transforms a string 'billing=5,cpu=2,mem=24G,node=1' into a dict
         # { 'billing': 5, 'cpu': 2, 'mem': '24G', 'node': 1 }
         tres = log_entry[9]
