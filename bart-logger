@@ -108,7 +108,7 @@ def main():
             suppress_usermap_info = cfg.getConfigValueBool(config.SECTION_COMMON,config.SUPPRESS_USERMAP_INFO,config.DEFAULT_SUPPRESS_USERMAP_INFO)
             if not suppress_usermap_info and lrmsObj.missing_user_mappings:
                 users = ','.join(lrmsObj.missing_user_mappings)
-                logging.warn('Missing user mapping for the following users: %s' % users)
+                logging.warning('Missing user mapping for the following users: %s' % users)
                 
             logging.info('Module %s done' % section)
 
