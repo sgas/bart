@@ -32,6 +32,7 @@ SECTION_COMMON = 'common'
 HOSTNAME   = 'hostname'
 USERMAP    = 'usermap'
 VOMAP      = 'vomap'
+DEFAULTVO  = 'defaultvo'
 LOGDIR     = 'logdir'
 LOGFILE    = 'logfile'
 LOGLEVEL   = 'loglevel'
@@ -140,8 +141,11 @@ class BartConfig:
 class BartMapFile:
     def __init__(self):
         self.map_ = {}
+        self.default = None
 
-    def load(self,map_file):
+    def load(self,map_file,default=None):
+        self.default = default
+
         self.map_ = {}
 
         for line in open(map_file).readlines():
@@ -161,13 +165,9 @@ class BartMapFile:
 
         return self
 
-    def getMapping(self):
-        return self.map_
-    
     def get(self,key):
         try:
             return self.map_[key]
         except KeyError:
-            return None
-
+            return self.default
 

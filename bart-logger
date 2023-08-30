@@ -65,7 +65,8 @@ def main():
     vo_map = BartMapFile()
     try:
         vo_map_file = cfg.getConfigValue(config.SECTION_COMMON, config.VOMAP, config.DEFAULT_VOMAP_FILE)
-        vo_map.load(vo_map_file)
+        default_vo = cfg.getConfigValue(config.SECTION_COMMON, config.DEFAULTVO, None)
+        vo_map.load(vo_map_file, default_vo)
     except IOError:
         logging.error('IOError while attempting to read vo map at %s (missing file?)' % vo_map_file)
 

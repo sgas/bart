@@ -266,17 +266,16 @@ class Slurm:
         else:
             record_id = fqdn_job_id
 
-        if not user_name in user_map.getMapping():
+        if not user_map.get(user_name):
             self.missing_user_mappings[user_name] = True
 
         vo_info = []
-        if account_name is not None:
-            mapped_project = project_map.get(account_name)
-            if mapped_project is not None:
-                voi = usagerecord.VOInformation()
-                voi.type = 'lrmsurgen-projectmap'
-                voi.name = mapped_project
-                vo_info = [voi]
+        mapped_project = project_map.get(account_name)
+        if mapped_project is not None:
+            voi = usagerecord.VOInformation()
+            voi.type = 'lrmsurgen-projectmap'
+            voi.name = mapped_project
+            vo_info = [voi]
 
         ## fill in usage record fields
         ur = usagerecord.UsageRecord()

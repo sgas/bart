@@ -185,7 +185,7 @@ class Torque:
             job_identifier = job_id
         fqdn_job_id = hostname + ':' + job_identifier
 
-        if not user_name in user_map.getMapping():
+        if not user_map.get(user_name):
             self.missing_user_mappings[user_name] = True
 
         vo_info = []
