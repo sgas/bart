@@ -46,6 +46,11 @@ DEFAULT_CHARGE_UNIT  = None
 CHARGE_SCALE         = 'charge_scale'
 DEFAULT_CHARGE_SCALE = 1.
 
+# If this is set to a comma separated list of users, we will fetch jobs of only
+# those users. If unset/None, all users' jobs are fetched.
+USERS = 'users'
+USERS_DEFAULT = None
+
 CONFIG = {
             STATEFILE:         { 'required': False },
             STATEFILE_DEFAULT: { 'required': False, type: 'int' },
@@ -54,9 +59,10 @@ CONFIG = {
             PROCESSORS_UNIT:   { 'required': False },
             CHARGE_UNIT:       { 'required': False },
             CHARGE_SCALE:      { 'required': False, type: 'float' },
+            USERS:             { 'required': False },
           }
 
-COMMAND = 'sacct --allusers --duplicates --parsable2 --format=JobIDRaw,User,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist,NNodes --state=%s --starttime="%s" --endtime="%s"'
+COMMAND = 'sacct %(users)s --duplicates --parsable2 --format=JobIDRaw,User,Partition,Submit,Start,End,Account,Elapsed,UserCPU,AllocTRES,Nodelist,NNodes --state=%(states)s --starttime="%(starttime)s" --endtime="%(endtime)s"'
 
 def exec_cmd(cmd):
     """
@@ -98,7 +104,7 @@ class SlurmBackend:
     """
     DB backend for slurm accounting.
     """
-    def __init__(self, state_starttime, max_days):
+    def __init__(self, state_starttime, max_days, user_list):
 
         self.end_str = datetime.datetime.now().isoformat().split('.')[0]
         self.results = []
@@ -115,10 +121,13 @@ class SlurmBackend:
             else:
                 croped = False
 
-            if versioncmp(sacct_version, "17.11.0") < 0:
-                command = COMMAND % ('ca,cd,f,nf,pr,rq,to', state_starttime, self.end_str)
-            else:
-                command = COMMAND % ('ca,cd,f,nf,pr,rq,to,oom', state_starttime, self.end_str)
+            args = {
+                "starttime": state_starttime,
+                "endtime": self.end_str,
+                "users": '--user=%s' % user_list if user_list else '--allusers',
+                "states": 'ca,cd,f,nf,pr,rq,to' if versioncmp(sacct_version, "17.11.0") < 0 else 'ca,cd,f,nf,pr,rq,to,oom'
+            }
+            command = COMMAND % args
 
             self.results = exec_cmd(command)
             # remove description line
@@ -309,7 +318,7 @@ class Slurm:
         """
         self.missing_user_mappings = {}
 
-        tlp = SlurmBackend(self.state, self.cfg.getConfigValue(SECTION, MAX_DAYS, MAX_DAYS_DEFAULT))
+        tlp = SlurmBackend(self.state, self.cfg.getConfigValue(SECTION, MAX_DAYS, MAX_DAYS_DEFAULT), self.cfg.getConfigValue(SECTION, USERS, USERS_DEFAULT))
         
         count = 0
         while True:
