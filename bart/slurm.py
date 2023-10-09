@@ -234,7 +234,7 @@ class Slurm:
         Creates a Usage Record object given a slurm log entry.
         """
         
-        if log_entry[1] == '' or log_entry[2] == '':
+        if log_entry[1] == '' or log_entry[2] == '' or log_entry[7] == '00:00:00':
             return None
 
         # Slurm 22 seems to handle cancelled jobs that never get
@@ -259,7 +259,7 @@ class Slurm:
         start_time   = time.mktime(common.datetimeFromIsoStr(log_entry[4]).timetuple())
         end_time     = time.mktime(common.datetimeFromIsoStr(log_entry[5]).timetuple())
         account_name = log_entry[6]
-        utilized_cpu = common.getSeconds(log_entry[8])
+        utilized_cpu = common.getSeconds(log_entry[8] or '00:00:00')
         wall_time    = common.getSeconds(log_entry[7])
         processors   = self.getProcessors(tresdict)
         charge       = self.getCharge(tresdict, wall_time)
