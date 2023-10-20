@@ -114,7 +114,7 @@ class SlurmBackend:
         while not self.results and croped:
             # Check if number of days since last run is > search_days, if so only
             # advance max_days days        
-            search_days += int(max_days)
+            search_days += max_days
             if max_days > 0 and datetime.datetime.now() - datetime.datetime.strptime( state_starttime, "%Y-%m-%dT%H:%M:%S" ) > datetime.timedelta(days=search_days):
                 self.end_str = datetime.datetime.strptime( state_starttime, "%Y-%m-%dT%H:%M:%S" ) + datetime.timedelta(days=search_days)
                 self.end_str = self.end_str.isoformat().split('.')[0]
@@ -318,7 +318,7 @@ class Slurm:
         """
         self.missing_user_mappings = {}
 
-        tlp = SlurmBackend(self.state, self.cfg.getConfigValue(SECTION, MAX_DAYS, MAX_DAYS_DEFAULT), self.cfg.getConfigValue(SECTION, USERS, USERS_DEFAULT))
+        tlp = SlurmBackend(self.state, int(self.cfg.getConfigValue(SECTION, MAX_DAYS, MAX_DAYS_DEFAULT)), self.cfg.getConfigValue(SECTION, USERS, USERS_DEFAULT))
         
         count = 0
         while True:
