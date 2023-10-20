@@ -529,7 +529,7 @@ def setupLogging(options, cfg):
     # open logfile
     if options.stdout:
         logging.basicConfig(
-            stream=sys.stdout, format=LOG_FORMAT, level=loglevel, force=True
+            stream=sys.stdout, format=LOG_FORMAT, level=loglevel,
         )
     else:
         logfile = options.logfile
@@ -538,7 +538,7 @@ def setupLogging(options, cfg):
                 cfg, CONFIG_SECTION_LOGGER, CONFIG_LOGFILE, DEFAULT_LOGFILE
             )
         logging.basicConfig(
-            filename=logfile, format=LOG_FORMAT, level=loglevel, force=True
+            filename=logfile, format=LOG_FORMAT, level=loglevel,
         )
 
 
@@ -584,9 +584,6 @@ def doMain():
     """
     main, parse command line, setup logging, start the actual logic, etc.
     """
-
-    # Basic log options
-    logging.basicConfig(format=LOG_FORMAT, level=logging.ERROR)
 
     # start by parsing the command line to see if we have a specific config file
     options = getOptions()
