@@ -345,7 +345,7 @@ class Slurm:
         This is returns the last jobid processed.
         """
         if state is None or len(state) == 0:
-            # no statefile -> we start from 50000 (DEFAULT_STATEFILE_DEFAULT) seconds / 5.7 days ago
+            # no statefile -> we start from STATEFILE_DEFAULT seconds ago
             sfd = int(self.cfg.getConfigValue(SECTION, STATEFILE_DEFAULT, DEFAULT_STATEFILE_DEFAULT))
             dt = datetime.datetime.now()-datetime.timedelta(seconds=sfd)
             state = dt.isoformat().split('.')[0]
