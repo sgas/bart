@@ -262,7 +262,7 @@ class Slurm:
         utilized_cpu = common.getSeconds(log_entry[8])
         wall_time    = common.getSeconds(log_entry[7])
         processors   = self.getProcessors(tresdict)
-        gpus         = tresdict.get('gres/gpu', 0)
+        gpus         = tresdict.get('gres/gpu')
         charge       = self.getCharge(tresdict, wall_time)
         hosts        = self.getNodes(log_entry[10])
         nnodes       = int(log_entry[11])
