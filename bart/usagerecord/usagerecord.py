@@ -68,6 +68,7 @@ class UsageRecord:
         self.host               = None
         self.node_count         = None
         self.processors         = None
+        self.alloc_res          = dict()
         self.submit_time        = None
         self.end_time           = None
         self.start_time         = None
@@ -148,6 +149,10 @@ class UsageRecord:
         if self.host           is not None :  setElement(ure, ur.HOST, self.host)
         if self.node_count     is not None :  setElement(ure, ur.NODE_COUNT, self.node_count)
         if self.processors     is not None :  setElement(ure, ur.PROCESSORS, self.processors)
+        if self.gpus           is not None :
+            gpus = ET.SubElement(ure, ur.ALLOC_RESOURCE)
+            gpus.set(ur.RESOURCE_TYPE, "gres/gpu")
+            gpus.set(ur.RESOURCE_AMOUNT, str(self.gpus))
         if self.submit_host    is not None :  setElement(ure, ur.SUBMIT_HOST, self.submit_host)
         if self.project_name   is not None :  setElement(ure, ur.PROJECT_NAME, self.project_name)
         if self.submit_time    is not None :  setElement(ure, ur.SUBMIT_TIME, self.submit_time)
